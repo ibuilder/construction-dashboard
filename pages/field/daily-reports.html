@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Reports | Construction Project Management</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="../../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link href="../../assets/css/vendor/bootstrap-icons.css" rel="stylesheet">
+  
+  <!-- DataTables CSS -->
+  <link href="../../assets/css/vendor/dataTables.bootstrap5.min.css" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="wrapper">
+    <!-- Sidebar will be included via JavaScript -->
+    <div id="sidebar-container"></div>
+    
+    <!-- Page Content -->
+    <div class="content">
+      <!-- Top Navigation Bar will be included via JavaScript -->
+      <div id="navbar-container"></div>
+      
+      <!-- Loading Indicator -->
+      <div id="loading-indicator" class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" style="display: none; z-index: 1050;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      
+      <!-- Alert Container -->
+      <div id="alert-container" class="container-fluid p-4"></div>
+      
+      <!-- Main Content -->
+      <div class="container-fluid p-4">
+        <!-- Daily Reports List View -->
+        <div id="daily-reports-table-container">
+          <!-- Page Header -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 form-title">Create Daily Report</h1>
+                <button type="button" class="btn btn-outline-secondary btn-cancel">
+                  <i class="bi bi-arrow-left me-1"></i> Back to List
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <form id="daily-report-form" class="row g-3">
+                <div class="col-md-6">
+                  <label for="report_date" class="form-label">Report Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="report_date" name="report_date" required>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="status" class="form-label">Status</label>
+                  <select class="form-select" id="status" name="status">
+                    <option value="draft">Draft</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-3">
+                  <label for="weather_conditions" class="form-label">Weather Conditions</label>
+                  <select class="form-select" id="weather_conditions" name="weather_conditions">
+                    <option value="">Select Weather</option>
+                    <option value="Clear">Clear</option>
+                    <option value="Cloudy">Cloudy</option>
+                    <option value="Partly Cloudy">Partly Cloudy</option>
+                    <option value="Rain">Rain</option>
+                    <option value="Snow">Snow</option>
+                    <option value="Windy">Windy</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-3">
+                  <label for="temperature_low" class="form-label">Low Temperature (°F)</label>
+                  <input type="number" class="form-control" id="temperature_low" name="temperature_low" min="-50" max="150">
+                </div>
+                
+                <div class="col-md-3">
+                  <label for="temperature_high" class="form-label">High Temperature (°F)</label>
+                  <input type="number" class="form-control" id="temperature_high" name="temperature_high" min="-50" max="150">
+                </div>
+                
+                <div class="col-md-3">
+                  <label for="precipitation" class="form-label">Precipitation</label>
+                  <input type="text" class="form-control" id="precipitation" name="precipitation" placeholder="e.g. 0.5 inches of rain">
+                </div>
+                
+                <div class="col-12">
+                  <label for="work_performed" class="form-label">Work Performed <span class="text-danger">*</span></label>
+                  <textarea class="form-control" id="work_performed" name="work_performed" rows="5" required></textarea>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="issues_encountered" class="form-label">Issues Encountered</label>
+                  <textarea class="form-control" id="issues_encountered" name="issues_encountered" rows="3"></textarea>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="delay_factors" class="form-label">Delay Factors</label>
+                  <textarea class="form-control" id="delay_factors" name="delay_factors" rows="3"></textarea>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="visitors" class="form-label">Visitors</label>
+                  <textarea class="form-control" id="visitors" name="visitors" rows="2"></textarea>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="safety_incidents" class="form-label">Safety Incidents</label>
+                  <textarea class="form-control" id="safety_incidents" name="safety_incidents" rows="2"></textarea>
+                </div>
+                
+                <div class="col-12">
+                  <hr>
+                  <h5>Labor</h5>
+                  <div id="labor-container"></div>
+                  <div class="text-end mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary add-labor-btn">
+                      <i class="bi bi-plus"></i> Add Labor
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="col-12">
+                  <hr>
+                  <h5>Equipment</h5>
+                  <div id="equipment-container"></div>
+                  <div class="text-end mb-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary add-equipment-btn">
+                      <i class="bi bi-plus"></i> Add Equipment
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="col-12 text-end">
+                  <button type="button" class="btn btn-outline-secondary btn-cancel me-2">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Save Report</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Daily Report Detail View -->
+        <div id="daily-report-details" style="display: none;">
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 report-number">Daily Report #123</h1>
+                <div>
+                  <button type="button" class="btn btn-outline-secondary back-to-list">
+                    <i class="bi bi-arrow-left me-1"></i> Back to List
+                  </button>
+                  <button type="button" class="btn btn-outline-primary edit-record ms-2">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                  </button>
+                  <button type="button" class="btn btn-outline-danger delete-record ms-2">
+                    <i class="bi bi-trash me-1"></i> Delete
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary export-record ms-2">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Export
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-lg-8">
+              <!-- Daily Report Details Card -->
+              <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                  <h5 class="card-title mb-0">Daily Report Details</h5>
+                  <span class="record-status status-submitted">SUBMITTED</span>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-4">
+                    <div class="col-md-6">
+                      <h5 class="report-date mb-3">April 3, 2025</h5>
+                    </div>
+                    <div class="col-md-6">
+                      <p class="text-muted mb-1">Weather</p>
+                      <p class="weather-conditions">Clear (65° - 75°), No precipitation</p>
+                    </div>
+                  </div>
+                  
+                  <div class="card mb-4">
+                    <div class="card-header">
+                      <h6 class="mb-0">Work Performed</h6>
+                    </div>
+                    <div class="card-body">
+                      <div class="work-performed">
+                        Work performed details will appear here...
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-4">
+                    <div class="col-md-6">
+                      <div class="card h-100">
+                        <div class="card-header">
+                          <h6 class="mb-0">Issues Encountered</h6>
+                        </div>
+                        <div class="card-body">
+                          <div class="issues-encountered">
+                            Issues will appear here...
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="card h-100">
+                        <div class="card-header">
+                          <h6 class="mb-0">Delay Factors</h6>
+                        </div>
+                        <div class="card-body">
+                          <div class="delay-factors">
+                            Delay factors will appear here...
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-4">
+                    <div class="col-md-6">
+                      <div class="card h-100">
+                        <div class="card-header">
+                          <h6 class="mb-0">Visitors</h6>
+                        </div>
+                        <div class="card-body">
+                          <div class="visitors">
+                            Visitors will appear here...
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <div class="card h-100">
+                        <div class="card-header">
+                          <h6 class="mb-0">Safety Incidents</h6>
+                        </div>
+                        <div class="card-body">
+                          <div class="safety-incidents">
+                            Safety incidents will appear here...
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="card mb-4">
+                    <div class="card-header">
+                      <h6 class="mb-0">Labor</h6>
+                    </div>
+                    <div class="card-body">
+                      <div id="labor-details">
+                        <!-- Labor details will be loaded dynamically -->
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="card mb-4">
+                    <div class="card-header">
+                      <h6 class="mb-0">Equipment</h6>
+                    </div>
+                    <div class="card-body">
+                      <div id="equipment-details">
+                        <!-- Equipment details will be loaded dynamically -->
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Attachments -->
+              <div class="card border-0 shadow-sm mb-4" id="attachments-container">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                  <h5 class="card-title mb-0">Attachments</h5>
+                  <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#attachment-upload">
+                    <i class="bi bi-plus"></i> Add Attachment
+                  </button>
+                </div>
+                <div class="collapse" id="attachment-upload">
+                  <div class="card-body border-bottom">
+                    <form id="attachment-upload-form">
+                      <div class="mb-3">
+                        <label for="file-upload" class="form-label">Upload Files</label>
+                        <input type="file" class="form-control" id="file-upload" multiple>
+                      </div>
+                      <div class="selected-files mb-3">
+                        <div class="no-files">No files selected</div>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <div>
+                          <span class="text-danger upload-error" style="display: none;"></span>
+                          <span class="text-success upload-success" style="display: none;"></span>
+                        </div>
+                        <div>
+                          <button type="button" class="btn btn-outline-secondary cancel-button me-2">Cancel</button>
+                          <button type="submit" class="btn btn-primary upload-button">Upload</button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="attachments-list">
+                    <!-- Attachments will be loaded dynamically -->
+                    <div class="no-attachments">No attachments yet</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Comments -->
+              <div class="card border-0 shadow-sm mb-4" id="comments-container">
+                <div class="card-header bg-white border-0">
+                  <h5 class="card-title mb-0">Comments</h5>
+                </div>
+                <div class="card-body">
+                  <div class="comments-list">
+                    <!-- Comments will be loaded dynamically -->
+                    <div class="no-comments">No comments yet</div>
+                  </div>
+                </div>
+                <div class="card-footer bg-white">
+                  <form class="comment-form">
+                    <div class="input-group">
+                      <textarea class="form-control comment-input" placeholder="Add a comment..." rows="2"></textarea>
+                      <button class="btn btn-primary" type="submit">Post</button>
+                    </div>
+                    <div class="text-danger comment-error mt-2" style="display: none;"></div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-lg-4">
+              <!-- Metadata Card -->
+              <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                  <h5 class="card-title mb-0">Information</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Created By</div>
+                    <div class="col-7 created-by">John Doe</div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Created On</div>
+                    <div class="col-7 created-at">April 3, 2025</div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Last Updated</div>
+                    <div class="col-7 updated-by">Sarah Johnson, April 3, 2025</div>
+                  </div>
+                  <hr>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Status</div>
+                    <div class="col-7">
+                      <span class="badge bg-primary">SUBMITTED</span>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Total Labor</div>
+                    <div class="col-7 total-labor">12 workers, 96 hours</div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Total Equipment</div>
+                    <div class="col-7 total-equipment">5 pieces, 40 hours</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Weather Card -->
+              <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                  <h5 class="card-title mb-0">Weather Details</h5>
+                </div>
+                <div class="card-body">
+                  <div class="text-center mb-3">
+                    <i class="bi bi-sun fs-1 text-warning"></i>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Conditions</div>
+                    <div class="col-7 weather-type">Clear</div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Temperature</div>
+                    <div class="col-7 temperature-range">65° - 75°F</div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Precipitation</div>
+                    <div class="col-7 precipitation-detail">None</div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Wind</div>
+                    <div class="col-7 wind-detail">5-10 mph</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Related Items Card -->
+              <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0">
+                  <h5 class="card-title mb-0">Related Items</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Schedule</div>
+                    <div class="col-7">
+                      <a href="./schedule.html">View Schedule</a>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Photos</div>
+                    <div class="col-7">
+                      <a href="./photo-library.html?date=2025-04-03">View Photos (12)</a>
+                    </div>
+                  </div>
+                  <div class="row mb-3">
+                    <div class="col-5 text-muted">Safety</div>
+                    <div class="col-7">
+                      <a href="../safety/observations.html?date=2025-04-03">Safety Observations (2)</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <footer class="footer bg-light py-3 mt-auto">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-0 text-muted">&copy; 2025 Construction Project Management</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+              <a href="../help.html" class="text-muted text-decoration-none me-3">Help</a>
+              <a href="../privacy.html" class="text-muted text-decoration-none me-3">Privacy</a>
+              <a href="../terms.html" class="text-muted text-decoration-none">Terms</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
+  
+  <!-- jQuery (required for Bootstrap) -->
+  <script src="../../assets/js/vendor/jquery.min.js"></script>
+  
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="../../assets/js/vendor/bootstrap.bundle.min.js"></script>
+  
+  <!-- DataTables JS -->
+  <script src="../../assets/js/vendor/jquery.dataTables.min.js"></script>
+  <script src="../../assets/js/vendor/dataTables.bootstrap5.min.js"></script>
+  
+  <!-- jsPDF -->
+  <script src="../../assets/js/vendor/jspdf.min.js"></script>
+  
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- App JS -->
+  <script type="module">
+    import { initApp } from '../../assets/js/app.js';
+    import { initComments } from '../../assets/js/components/comments.js';
+    import { initFileUpload } from '../../assets/js/components/file-upload.js';
+    import initFieldModules from '../../assets/js/modules/field.js';
+    
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Initialize the application
+      await initApp();
+      
+      // Initialize field module (Daily Reports)
+      const dailyReportModule = initFieldModules();
+      
+      // Set default date for new reports to today
+      const reportDateInput = document.getElementById('report_date');
+      if (reportDateInput && !reportDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        reportDateInput.value = today;
+      }
+      
+      // Load sidebar and navbar
+      fetch('../../components/sidebar.html')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('sidebar-container').innerHTML = data;
+          // Activate current nav item
+          const navLinks = document.querySelectorAll('#sidebar .nav-link');
+          navLinks.forEach(link => {
+            if (link.getAttribute('href')?.includes('daily-reports.html')) {
+              link.classList.add('active');
+              
+              // Expand parent if in dropdown
+              const dropdown = link.closest('.collapse');
+              if (dropdown) {
+                dropdown.classList.add('show');
+                const toggle = document.querySelector(`[data-bs-target="#${dropdown.id}"]`);
+                if (toggle) {
+                  toggle.classList.remove('collapsed');
+                  toggle.setAttribute('aria-expanded', 'true');
+                }
+              }
+            }
+          });
+        });
+      
+      fetch('../../components/navbar.html')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('navbar-container').innerHTML = data;
+        });
+    });
+  </script>
+</body>
+</html><div class="col-12">
+              <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3">Daily Reports</h1>
+                <div>
+                  <button id="create-record" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Create Report
+                  </button>
+                  <button id="export-records" class="btn btn-outline-secondary ms-2">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Export
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Filters -->
+          <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-header bg-white">
+              <h5 class="card-title mb-0">Filters</h5>
+            </div>
+            <div class="card-body">
+              <form id="filter-form" class="row g-3">
+                <div class="col-md-3">
+                  <label for="filter-date-range" class="form-label">Date Range</label>
+                  <div class="input-group">
+                    <input type="date" id="filter-date-from" name="report_date_from" class="form-control">
+                    <span class="input-group-text">to</span>
+                    <input type="date" id="filter-date-to" name="report_date_to" class="form-control">
+                  </div>
+                </div>
+                
+                <div class="col-md-3">
+                  <label for="filter-status" class="form-label">Status</label>
+                  <select id="filter-status" name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-3">
+                  <label for="filter-author" class="form-label">Author</label>
+                  <select id="filter-author" name="created_by" class="form-select">
+                    <option value="">All Authors</option>
+                    <!-- Options will be populated by JavaScript -->
+                  </select>
+                </div>
+                
+                <div class="col-md-3">
+                  <label for="filter-weather" class="form-label">Weather</label>
+                  <select id="filter-weather" name="weather_conditions" class="form-select">
+                    <option value="">All Weather</option>
+                    <option value="Clear">Clear</option>
+                    <option value="Cloudy">Cloudy</option>
+                    <option value="Partly Cloudy">Partly Cloudy</option>
+                    <option value="Rain">Rain</option>
+                    <option value="Snow">Snow</option>
+                    <option value="Windy">Windy</option>
+                  </select>
+                </div>
+                
+                <div class="col-12 text-end">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-filter me-1"></i> Apply Filters
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary ms-2 reset-filters">
+                    <i class="bi bi-x-circle me-1"></i> Reset
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Daily Reports Table -->
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <table id="daily-reports-table" class="table table-striped table-hover" style="width:100%">
+                <!-- Table will be populated by DataTables -->
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Daily Report Form View -->
+        <div id="daily-report-form-container" style="display: none;">
+          <div class="row mb-4">

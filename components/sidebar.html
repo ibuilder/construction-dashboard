@@ -1,0 +1,272 @@
+<!-- Sidebar -->
+<nav id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <h3>Construction PM</h3>
+      <button type="button" id="sidebar-toggle" class="btn btn-link d-md-none">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    
+    <div class="sidebar-user">
+      <div class="user-image">
+        <img src="../assets/img/default-avatar.png" class="user-image rounded-circle" alt="User">
+      </div>
+      <div class="user-info">
+        <div class="user-name">John Doe</div>
+        <div class="user-role text-muted">General Contractor</div>
+      </div>
+    </div>
+    
+    <ul class="list-unstyled components">
+      <li>
+        <a href="../pages/dashboard.html" class="d-flex align-items-center">
+          <i class="bi bi-speedometer2 me-2"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      
+      <li>
+        <a href="#preconstructionSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-building me-2"></i>
+          <span>Preconstruction</span>
+        </a>
+        <ul class="collapse list-unstyled" id="preconstructionSubmenu">
+          <li>
+            <a href="../pages/preconstruction/qualified-bidders.html">Qualified Bidders</a>
+          </li>
+          <li>
+            <a href="../pages/preconstruction/bid-packages.html">Bid Packages</a>
+          </li>
+          <li>
+            <a href="../pages/preconstruction/bid-manual.html">Bid Manual</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="#engineeringSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-gear me-2"></i>
+          <span>Engineering</span>
+        </a>
+        <ul class="collapse list-unstyled" id="engineeringSubmenu">
+          <li>
+            <a href="../pages/engineering/rfis.html">RFIs</a>
+          </li>
+          <li>
+            <a href="../pages/engineering/submittals.html">Submittals</a>
+          </li>
+          <li>
+            <a href="../pages/engineering/drawings.html">Drawings</a>
+          </li>
+          <li>
+            <a href="../pages/engineering/specifications.html">Specifications</a>
+          </li>
+          <li>
+            <a href="../pages/engineering/file-explorer.html">File Explorer</a>
+          </li>
+          <li>
+            <a href="../pages/engineering/permitting.html">Permitting</a>
+          </li>
+          <li>
+            <a href="../pages/engineering/meeting-minutes.html">Meeting Minutes</a>
+          </li>
+          <li>
+            <a href="../pages/engineering/transmittals.html">Transmittals</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="#fieldSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-clipboard me-2"></i>
+          <span>Field</span>
+        </a>
+        <ul class="collapse list-unstyled" id="fieldSubmenu">
+          <li>
+            <a href="../pages/field/daily-reports.html">Daily Reports</a>
+          </li>
+          <li>
+            <a href="../pages/field/photo-library.html">Photo Library</a>
+          </li>
+          <li>
+            <a href="../pages/field/schedule.html">Schedule</a>
+          </li>
+          <li>
+            <a href="../pages/field/checklists.html">Checklists</a>
+          </li>
+          <li>
+            <a href="../pages/field/punchlist.html">Punchlist</a>
+          </li>
+          <li>
+            <a href="../pages/field/pull-planning.html">Pull Planning</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="#safetySubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-shield me-2"></i>
+          <span>Safety</span>
+        </a>
+        <ul class="collapse list-unstyled" id="safetySubmenu">
+          <li>
+            <a href="../pages/safety/observations.html">Observations</a>
+          </li>
+          <li>
+            <a href="../pages/safety/pretask-plans.html">PreTask Plans</a>
+          </li>
+          <li>
+            <a href="../pages/safety/job-hazard-analysis.html">Job Hazard Analysis</a>
+          </li>
+          <li>
+            <a href="../pages/safety/employee-orientations.html">Employee Orientations</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="#contractsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-file-earmark-text me-2"></i>
+          <span>Contracts</span>
+        </a>
+        <ul class="collapse list-unstyled" id="contractsSubmenu">
+          <li>
+            <a href="../pages/contracts/prime-contract.html">Prime Contract</a>
+          </li>
+          <li>
+            <a href="../pages/contracts/subcontracts.html">Subcontracts</a>
+          </li>
+          <li>
+            <a href="../pages/contracts/professional-service-agreements.html">Professional Service Agreements</a>
+          </li>
+          <li>
+            <a href="../pages/contracts/lien-waivers.html">Lien Waivers</a>
+          </li>
+          <li>
+            <a href="../pages/contracts/certificates-of-insurance.html">Certificates of Insurance</a>
+          </li>
+          <li>
+            <a href="../pages/contracts/letters-of-intent.html">Letters of Intent</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="#costSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-cash me-2"></i>
+          <span>Cost</span>
+        </a>
+        <ul class="collapse list-unstyled" id="costSubmenu">
+          <li>
+            <a href="../pages/cost/budget-forecast.html">Budget & Forecast</a>
+          </li>
+          <li>
+            <a href="../pages/cost/invoicing.html">Invoicing</a>
+          </li>
+          <li>
+            <a href="../pages/cost/direct-costs.html">Direct Costs</a>
+          </li>
+          <li>
+            <a href="../pages/cost/potential-changes.html">Potential Changes</a>
+          </li>
+          <li>
+            <a href="../pages/cost/change-orders.html">Change Orders</a>
+          </li>
+          <li>
+            <a href="../pages/cost/approval-letters.html">Approval Letters</a>
+          </li>
+          <li>
+            <a href="../pages/cost/time-materials.html">Time & Materials</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="#bimSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-box me-2"></i>
+          <span>BIM</span>
+        </a>
+        <ul class="collapse list-unstyled" id="bimSubmenu">
+          <li>
+            <a href="../pages/bim/3d-model.html">3D Model</a>
+          </li>
+          <li>
+            <a href="../pages/bim/coordination-issues.html">Coordination Issues</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="#closeoutSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-check-square me-2"></i>
+          <span>Closeout</span>
+        </a>
+        <ul class="collapse list-unstyled" id="closeoutSubmenu">
+          <li>
+            <a href="../pages/closeout/om-manuals.html">O&M Manuals</a>
+          </li>
+          <li>
+            <a href="../pages/closeout/warranties.html">Warranties</a>
+          </li>
+          <li>
+            <a href="../pages/closeout/attic-stock.html">Attic Stock</a>
+          </li>
+        </ul>
+      </li>
+      
+      <li>
+        <a href="../pages/reports/generate.html" class="d-flex align-items-center">
+          <i class="bi bi-bar-chart me-2"></i>
+          <span>Reports</span>
+        </a>
+      </li>
+      
+      <li>
+        <a href="#settingsSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="dropdown-toggle d-flex align-items-center">
+          <i class="bi bi-gear-fill me-2"></i>
+          <span>Settings</span>
+        </a>
+        <ul class="collapse list-unstyled" id="settingsSubmenu">
+          <li>
+            <a href="../pages/settings/project-info.html">Project Info</a>
+          </li>
+          <li>
+            <a href="../pages/settings/csi-divisions.html">CSI Divisions</a>
+          </li>
+          <li>
+            <a href="../pages/settings/cost-codes.html">Cost Codes</a>
+          </li>
+          <li>
+            <a href="../pages/settings/labor-rates.html">Labor Rates</a>
+          </li>
+          <li>
+            <a href="../pages/settings/material-rates.html">Material Rates</a>
+          </li>
+          <li>
+            <a href="../pages/settings/equipment-rates.html">Equipment Rates</a>
+          </li>
+          <li>
+            <a href="../pages/settings/companies.html">Companies</a>
+          </li>
+          <li>
+            <a href="../pages/settings/users.html">Users</a>
+          </li>
+          <li>
+            <a href="../pages/settings/project-help.html">Project Help</a>
+          </li>
+          <li>
+            <a href="../pages/settings/database-settings.html">Database Settings</a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    
+    <div class="sidebar-footer mt-auto p-3">
+      <div class="d-grid gap-2">
+        <a href="#" id="sign-out-btn" class="btn btn-outline-danger btn-sm">
+          <i class="bi bi-box-arrow-right me-2"></i>
+          <span>Sign Out</span>
+        </a>
+      </div>
+    </div>
+  </nav>
