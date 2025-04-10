@@ -1,0 +1,42 @@
+# Core Flask dependencies
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.4
+Flask-Login==0.6.2
+Flask-WTF==1.1.1
+Flask-Mail==0.9.1
+Flask-Moment==1.0.5
+Flask-Caching==2.0.2
+Flask-Limiter==3.3.1
+Werkzeug==2.3.6
+Jinja2==3.1.2
+itsdangerous==2.1.2
+email-validator==2.0.0.post2
+
+# Database dependencies
+psycopg2-binary==2.9.6
+SQLAlchemy==2.0.17
+
+# Web server
+gunicorn==20.1.0
+
+# Utils
+python-dotenv==1.0.0
+markdown==3.4.3
+Pillow==10.0.0
+bleach==6.0.0
+boto3==1.28.1
+requests==2.31.0
+PyJWT==2.7.0
+redis==4.6.0
+celery==5.3.1
+
+# Development
+pytest==7.4.0
+pytest-flask==1.2.0
+coverage==7.2.7
+flake8==6.0.0
+black==23.7.0
+
+# Web3 integration
+web3==6.5.0

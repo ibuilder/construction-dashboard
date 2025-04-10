@@ -1,0 +1,201 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+header {
+    background-color: #343a40;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+}
+
+.container {
+    margin: 20px auto;
+    max-width: 1200px;
+}
+
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    font-size: 1.25rem;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+
+.btn {
+    margin: 5px;
+}
+
+.footer {
+    text-align: center;
+    padding: 10px;
+    background-color: #343a40;
+    color: white;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Sidebar */
+.wrapper {
+    display: flex;
+    width: 100%;
+}
+
+.sidebar {
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 999;
+    background: #343a40;
+    color: #fff;
+    transition: all 0.3s;
+}
+
+.sidebar.active {
+    margin-left: -250px;
+}
+
+.sidebar .sidebar-header {
+    padding: 20px;
+    background: #212529;
+}
+
+.sidebar ul.components {
+    padding: 20px 0;
+    border-bottom: 1px solid #47748b;
+}
+
+.sidebar ul p {
+    color: #fff;
+    padding: 10px;
+}
+
+.sidebar ul li a {
+    padding: 10px;
+    font-size: 1.1em;
+    display: block;
+    color: #fff;
+    text-decoration: none;
+}
+
+.sidebar ul li a:hover {
+    color: #fff;
+    background: #007bff;
+}
+
+.sidebar ul li.active > a,
+a[aria-expanded="true"] {
+    color: #fff;
+    background: #495057;
+}
+
+.sidebar ul ul a {
+    font-size: 0.9em !important;
+    padding-left: 30px !important;
+    background: #495057;
+}
+
+/* Content */
+.content {
+    width: calc(100% - 250px);
+    margin-left: 250px;
+    transition: all 0.3s;
+    min-height: 100vh;
+}
+
+.content.active {
+    width: 100%;
+    margin-left: 0;
+}
+
+/* DataTables Customizations */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.25em 0.5em;
+}
+
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 1em;
+}
+
+/* Card customizations */
+.card-dashboard {
+    border-left: 4px solid #007bff;
+}
+
+/* Forms */
+.form-label.required:after {
+    content: "*";
+    color: red;
+}
+
+/* Comments Section */
+.comment-box {
+    border-left: 3px solid #007bff;
+    padding-left: 10px;
+    margin-bottom: 15px;
+}
+
+/* File attachments */
+.attachment-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.attachment-list li {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.attachment-list li:last-child {
+    border-bottom: none;
+}
+
+/* Status badges */
+.status-badge {
+    font-size: 0.8em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        margin-left: -250px;
+    }
+    .sidebar.active {
+        margin-left: 0;
+    }
+    .content {
+        width: 100%;
+        margin-left: 0;
+    }
+    .content.active {
+        margin-left: 250px;
+    }
+}

@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block title %}API Documentation{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header">
+                    <h1 class="mb-0">Construction Dashboard API</h1>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        Welcome to the Construction Dashboard API documentation. This API provides access to project data for mobile and external applications.
+                    </p>
+
+                    <h2 class="mt-4">API Overview</h2>
+                    <p>
+                        The API provides RESTful endpoints for accessing project information, including:
+                    </p>
+                    <ul>
+                        <li>Projects</li>
+                        <li>Engineering documents (RFIs, Submittals)</li>
+                        <li>Field reports (Daily Reports, Photos)</li>
+                        <li>Safety observations and incidents</li>
+                        <li>Cost management (Change Orders, Invoices)</li>
+                        <li>Document verification via blockchain</li>
+                    </ul>
+
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        For detailed API documentation with request/response examples, please visit our 
+                        <a href="/api/docs" class="alert-link" target="_blank">Swagger UI Documentation</a>.
+                    </div>
+
+                    <h2 class="mt-4">Authentication</h2>
+                    <p>
+                        API requests require authentication using a Bearer token. To obtain a token:
+                    </p>
+                    <pre class="bg-light p-3 rounded"><code>POST /api/auth/token
+Content-Type: application/json
+
+{
+    "email": "your.email@example.com",
+    "password": "your_password"
+}</code></pre>
+
+                    <p class="mt-3">
+                        The response will contain your token:
+                    </p>
+                    <pre class="bg-light p-3 rounded"><code>{
+    "status": "success",
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "expires": "2025-04-09T15:30:45.123456",
+    "user": {
+        "id": 1,
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "role": "General Contractor"
+    }
+}</code></pre>
+
+                    <p class="mt-3">
+                        Include this token in all API requests:
+                    </p>
+                    <pre class="bg-light p-3 rounded"><code>GET /api/projects
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...</code></pre>
+
+                    <h2 class="mt-4">Getting Started</h2>
+                    <p>
+                        To start using the API:
+                    </p>
+                    <ol>
+                        <li>Obtain an authentication token</li>
+                        <li>List available projects with <code>GET /api/projects</code></li>
+                        <li>Access project details with <code>GET /api/projects/{id}</code></li>
+                        <li>Explore other endpoints as needed</li>
+                    </ol>
+                    
+                    <div class="text-center mt-5">
+                        <a href="/api/docs" class="btn btn-primary btn-lg">
+                            <i class="fas fa-book me-2"></i> View API Documentation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}Qualified Bidders{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Qualified Bidders</h1>
+        {% if current_user.role in ['Owner', 'General Contractor', 'Owners Representative'] %}
+        <a href="{{ url_for('projects.preconstruction.create_bidder', project_id=request.args.get('project_id')) }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Bidder
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped" id="bidders-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Contact</th>
+                            <th>Qualification Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bidder in bidders %}
+                        <tr>
+                            <td>{{ bidder.name }}</td>
+                            <td>{{ bidder.company.name }}</td>
+                            <td>{{ bidder.contact_name }}</td>
+                            <td>{{ bidder.qualification_date }}</td>
+                            <td>
+                                {% if bidder.qualification_status == 'qualified' %}
+                                <span class="badge bg-success">Qualified</span>
+                                {% elif bidder.qualification_status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif bidder.qualification_status == 'disqualified' %}
+                                <span class="badge bg-danger">Disqualified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('projects.preconstruction.view_bidder', id=bidder.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if current_user.role in ['Owner', 'General Contractor', 'Owners Representative'] %}
+                                    <a href="{{ url_for('projects.preconstruction.edit_bidder', id=bidder.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if current_user.role in ['Owner', 'General Contractor'] %}
+                                    <button type="button" class="btn btn-sm btn-danger delete-bidder" data-id="{{ bidder.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('projects.preconstruction.export_bidder_pdf', id=bidder.id) }}" class="btn btn-sm btn-secondary">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/projects/preconstruction/bidders.js') }}"></script>
+{% endblock %}
