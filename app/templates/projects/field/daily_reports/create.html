@@ -1,0 +1,487 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Daily Report - {{ project.name }}{% endblock %}
+
+{% block styles %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .manpower-entry {
+        background-color: #f8f9fc;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #e3e6f0;
+    }
+    .remove-entry {
+        color: #e74a3b;
+        cursor: pointer;
+    }
+    .weather-icon {
+        font-size: 1.5rem;
+        margin-right: 5px;
+    }
+    .preview-image {
+        max-height: 150px;
+        margin: 5px;
+        border: 1px solid #ddd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Create Daily Report</h1>
+        <div>
+            <a href="{{ url_for('projects.field.daily_reports', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">{{ project.name }} - New Daily Report</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" id="dailyReportForm">
+                {{ form.hidden_tag() }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.report_date.label(class="form-label") }}
+                            {{ form.report_date(class="form-control", type="date") }}
+                            {% if form.report_date.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.report_date.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.report_number.label(class="form-label") }}
+                            {{ form.report_number(class="form-control") }}
+                            {% if form.report_number.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.report_number.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3">Weather Conditions</h5>
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.weather_condition.label(class="form-label") }}
+                            {{ form.weather_condition(class="form-select") }}
+                            {% if form.weather_condition.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.weather_condition.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.temperature_low.label(class="form-label") }}
+                            {{ form.temperature_low(class="form-control") }}
+                            {% if form.temperature_low.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.temperature_low.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.temperature_high.label(class="form-label") }}
+                            {{ form.temperature_high(class="form-control") }}
+                            {% if form.temperature_high.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.temperature_high.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            {{ form.precipitation.label(class="form-label") }}
+                            {{ form.precipitation(class="form-control") }}
+                            {% if form.precipitation.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.precipitation.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="mb-3">Site Status</h5>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            {{ form.work_status.label(class="form-label") }}
+                            {{ form.work_status(class="form-select") }}
+                            {% if form.work_status.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.work_status.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            {{ form.site_conditions.label(class="form-label") }}
+                            {{ form.site_conditions(class="form-control", rows=2) }}
+                            {% if form.site_conditions.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.site_conditions.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-4" id="delayReasonContainer">
+                    {{ form.delay_reason.label(class="form-label") }}
+                    {{ form.delay_reason(class="form-control", rows=2) }}
+                    {% if form.delay_reason.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.delay_reason.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="mb-3">Labor</h5>
+                <div id="labor-entries">
+                    {% for entry in form.labor_entries %}
+                    <div class="labor-entry card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        {{ entry.company.label(class="form-label") }}
+                                        {{ entry.company(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        {{ entry.work_description.label(class="form-label") }}
+                                        {{ entry.work_description(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        {{ entry.worker_count.label(class="form-label") }}
+                                        {{ entry.worker_count(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        {{ entry.hours_worked.label(class="form-label") }}
+                                        {{ entry.hours_worked(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger remove-labor-entry mt-2">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-outline-primary mb-4" id="add-labor-entry">
+                    <i class="bi bi-plus-circle"></i> Add Labor Entry
+                </button>
+
+                <h5 class="mb-3">Equipment</h5>
+                <div id="equipment-entries">
+                    {% for entry in form.equipment_entries %}
+                    <div class="equipment-entry card mb-3">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        {{ entry.equipment_type.label(class="form-label") }}
+                                        {{ entry.equipment_type(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        {{ entry.count.label(class="form-label") }}
+                                        {{ entry.count(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-group">
+                                        {{ entry.hours_used.label(class="form-label") }}
+                                        {{ entry.hours_used(class="form-control") }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        {{ entry.notes.label(class="form-label") }}
+                                        {{ entry.notes(class="form-control") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 d-flex justify-content-end">
+                                    <button type="button" class="btn btn-danger remove-equipment-entry">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-outline-primary mb-4" id="add-equipment-entry">
+                    <i class="bi bi-plus-circle"></i> Add Equipment Entry
+                </button>
+
+                <h5 class="mb-3">Work Details</h5>
+                <div class="form-group mb-3">
+                    {{ form.work_performed.label(class="form-label") }}
+                    {{ form.work_performed(class="form-control", rows=4) }}
+                    {% if form.work_performed.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.work_performed.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-4">
+                    {{ form.materials_received.label(class="form-label") }}
+                    {{ form.materials_received(class="form-control", rows=3) }}
+                    {% if form.materials_received.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.materials_received.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="mb-3">Issues & Notes</h5>
+                <div class="form-group mb-3">
+                    {{ form.issues.label(class="form-label") }}
+                    {{ form.issues(class="form-control", rows=3) }}
+                    {% if form.issues.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.issues.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-4">
+                    {{ form.notes.label(class="form-label") }}
+                    {{ form.notes(class="form-control", rows=3) }}
+                    {% if form.notes.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.notes.errors %}
+                        <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="mb-3">Photos</h5>
+                <div class="form-group mb-4">
+                    {{ form.photos.label(class="form-label") }}
+                    {{ form.photos(class="form-control") }}
+                    <div class="form-text text-muted">
+                        Upload multiple photos related to today's work. Supported formats: JPG, PNG.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    {{ form.save_draft(class="btn btn-secondary me-2") }}
+                    {{ form.submit_report(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show/hide delay reason based on work status
+        const workStatusSelect = document.getElementById('work_status');
+        const delayReasonContainer = document.getElementById('delayReasonContainer');
+        
+        function toggleDelayReason() {
+            if (workStatusSelect.value === 'delayed' || workStatusSelect.value === 'halted') {
+                delayReasonContainer.style.display = 'block';
+            } else {
+                delayReasonContainer.style.display = 'none';
+            }
+        }
+        
+        // Initial toggle
+        toggleDelayReason();
+        
+        // Toggle on change
+        workStatusSelect.addEventListener('change', toggleDelayReason);
+        
+        // Labor entries management
+        const laborEntriesContainer = document.getElementById('labor-entries');
+        const addLaborEntryBtn = document.getElementById('add-labor-entry');
+        
+        // Add labor entry
+        addLaborEntryBtn.addEventListener('click', function() {
+            const index = laborEntriesContainer.children.length;
+            const entryHtml = `
+            <div class="labor-entry card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="labor_entries-${index}-company">Company</label>
+                                <input class="form-control" id="labor_entries-${index}-company" name="labor_entries-${index}-company" required type="text" value="">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label" for="labor_entries-${index}-work_description">Description of Work</label>
+                                <input class="form-control" id="labor_entries-${index}-work_description" name="labor_entries-${index}-work_description" required type="text" value="">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="labor_entries-${index}-worker_count">Number of Workers</label>
+                                <input class="form-control" id="labor_entries-${index}-worker_count" min="1" name="labor_entries-${index}-worker_count" required type="number" value="1">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label class="form-label" for="labor_entries-${index}-hours_worked">Hours Worked</label>
+                                <input class="form-control" id="labor_entries-${index}-hours_worked" min="0.5" name="labor_entries-${index}-hours_worked" required step="0.5" type="number" value="8">
+                            </div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger remove-labor-entry mt-2">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = entryHtml.trim();
+            laborEntriesContainer.appendChild(tempDiv.firstChild);
+        });
+        
+        // Remove labor entry
+        laborEntriesContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-labor-entry') || e.target.parentElement.classList.contains('remove-labor-entry')) {
+                const entry = (e.target.closest('.labor-entry'));
+                if (laborEntriesContainer.children.length > 1) {
+                    entry.remove();
+                } else {
+                    alert('At least one labor entry is required.');
+                }
+            }
+        });
+        
+        // Equipment entries management
+        const equipmentEntriesContainer = document.getElementById('equipment-entries');
+        const addEquipmentEntryBtn = document.getElementById('add-equipment-entry');
+        
+        // Add equipment entry
+        addEquipmentEntryBtn.addEventListener('click', function() {
+            const index = equipmentEntriesContainer.children.length;
+            const entryHtml = `
+            <div class="equipment-entry card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="equipment_entries-${index}-equipment_type">Equipment Type</label>
+                                <input class="form-control" id="equipment_entries-${index}-equipment_type" name="equipment_entries-${index}-equipment_type" required type="text" value="">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label" for="equipment_entries-${index}-count">Count</label>
+                                <input class="form-control" id="equipment_entries-${index}-count" min="1" name="equipment_entries-${index}-count" required type="number" value="1">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label class="form-label" for="equipment_entries-${index}-hours_used">Hours Used</label>
+                                <input class="form-control" id="equipment_entries-${index}-hours_used" min="0" name="equipment_entries-${index}-hours_used" required step="0.5" type="number" value="8">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label" for="equipment_entries-${index}-notes">Notes</label>
+                                <input class="form-control" id="equipment_entries-${index}-notes" name="equipment_entries-${index}-notes" type="text" value="">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="button" class="btn btn-danger remove-equipment-entry">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = entryHtml.trim();
+            equipmentEntriesContainer.appendChild(tempDiv.firstChild);
+        });
+        
+        // Remove equipment entry
+        equipmentEntriesContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-equipment-entry') || e.target.parentElement.classList.contains('remove-equipment-entry')) {
+                const entry = (e.target.closest('.equipment-entry'));
+                if (equipmentEntriesContainer.children.length > 1) {
+                    entry.remove();
+                } else {
+                    alert('At least one equipment entry is required.');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

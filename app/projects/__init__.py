@@ -2,8 +2,7 @@ from flask import Blueprint
 
 projects_bp = Blueprint('projects', __name__)
 
-# Import routes
-from . import routes
+from app.projects import routes
 
 # Import all section blueprints
 from .preconstruction import preconstruction_bp

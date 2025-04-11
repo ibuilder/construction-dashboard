@@ -2,144 +2,285 @@ from app.extensions import db
 from datetime import datetime
 from sqlalchemy.sql import func
 from app.models.base import Comment, Attachment
+from enum import Enum
+import json
+import uuid
+import os
+
+class WeatherCondition(str, Enum):
+    SUNNY = 'sunny'
+    PARTLY_CLOUDY = 'partly_cloudy'
+    CLOUDY = 'cloudy'
+    RAINY = 'rainy'
+    STORMY = 'stormy'
+    SNOWY = 'snowy'
+    FOGGY = 'foggy'
+    WINDY = 'windy'
+
+class WorkStatus(str, Enum):
+    WORKING = 'working'
+    DELAYED = 'delayed'
+    HALTED = 'halted'
 
 class DailyReport(db.Model):
+    """Daily report model for field operations"""
     __tablename__ = 'daily_reports'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    report_date = db.Column(db.Date, nullable=False, default=func.current_date())
-    report_number = db.Column(db.String(20))
-    weather_conditions = db.Column(db.String(100))
-    temperature_high = db.Column(db.Integer)
-    temperature_low = db.Column(db.Integer)
-    precipitation = db.Column(db.String(50))
-    wind_speed = db.Column(db.String(20))
-    delays = db.Column(db.Boolean, default=False)
-    delay_description = db.Column(db.Text)
-    manpower_count = db.Column(db.Integer, default=0)
+    report_number = db.Column(db.String(50))
+    report_date = db.Column(db.Date, default=datetime.utcnow().date)
+    
+    # Weather information
+    weather_condition = db.Column(db.String(20))
+    temperature_low = db.Column(db.Float)
+    temperature_high = db.Column(db.Float)
+    precipitation = db.Column(db.Float)  # in inches
+    wind_speed = db.Column(db.Float)  # in mph
+    
+    # Site conditions
+    site_conditions = db.Column(db.Text)
+    work_status = db.Column(db.String(20), default=WorkStatus.WORKING.value)
+    delay_reason = db.Column(db.Text)
+    
+    # Labor and equipment
+    labor_count = db.Column(db.Integer, default=0)
+    labor_hours = db.Column(db.Float, default=0)
+    equipment_count = db.Column(db.Integer, default=0)
+    
+    # Work performed
     work_performed = db.Column(db.Text)
     materials_received = db.Column(db.Text)
-    equipment_used = db.Column(db.Text)
-    visitors = db.Column(db.Text)
-    safety_incidents = db.Column(db.Text)
-    quality_issues = db.Column(db.Text)
+    
+    # Issues and notes
+    issues = db.Column(db.Text)
+    notes = db.Column(db.Text)
+    
+    # Status
+    is_submitted = db.Column(db.Boolean, default=False)
+    submitted_at = db.Column(db.DateTime)
+    
+    # Meta information
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=func.now())
     updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
-    project = db.relationship('Project', backref='daily_reports')
-    creator = db.relationship('User', foreign_keys=[created_by])
+    project = db.relationship('Project', backref=db.backref('daily_reports', lazy='dynamic'))
+    author = db.relationship('User', foreign_keys=[created_by])
     comments = db.relationship('Comment', backref='daily_report',
                               primaryjoin="and_(Comment.record_type=='daily_report', "
                                          "Comment.record_id==DailyReport.id)")
     attachments = db.relationship('Attachment', backref='daily_report',
                                  primaryjoin="and_(Attachment.record_type=='daily_report', "
                                             "Attachment.record_id==DailyReport.id)")
-    photos = db.relationship('Photo', backref='daily_report')
+    photos = db.relationship('ProjectPhoto', backref='daily_report', lazy='dynamic')
+    labor_entries = db.relationship('LaborEntry', backref='daily_report', lazy='dynamic')
+    equipment_entries = db.relationship('EquipmentEntry', backref='daily_report', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<DailyReport {self.report_number} - {self.report_date}>'
+
+class LaborEntry(db.Model):
+    __tablename__ = 'labor_entries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    daily_report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=False)
+    company = db.Column(db.String(100))
+    work_description = db.Column(db.String(255))
+    worker_count = db.Column(db.Integer)
+    hours_worked = db.Column(db.Float)
+    
+    def __repr__(self):
+        return f'<LaborEntry {self.company} - {self.worker_count} workers>'
+
+class EquipmentEntry(db.Model):
+    __tablename__ = 'equipment_entries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    daily_report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=False)
+    equipment_type = db.Column(db.String(100))
+    count = db.Column(db.Integer)
+    hours_used = db.Column(db.Float)
+    notes = db.Column(db.String(255))
+    
+    def __repr__(self):
+        return f'<EquipmentEntry {self.equipment_type} - {self.count} units>'
+
+class ProjectPhoto(db.Model):
+    __tablename__ = 'project_photos'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    daily_report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=True)
+    title = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    file_path = db.Column(db.String(255), nullable=False)
+    file_size = db.Column(db.Integer)  # in bytes
+    location = db.Column(db.String(100))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    is_featured = db.Column(db.Boolean, default=False)
+    uploaded_at = db.Column(db.DateTime, default=func.now())
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('photos', lazy='dynamic'))
+    uploader = db.relationship('User', foreign_keys=[uploaded_by])
+    
+    def __repr__(self):
+        return f'<ProjectPhoto {self.id} - {self.title}>'
+
+class SafetyIncident(db.Model):
+    __tablename__ = 'safety_incidents'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    incident_date = db.Column(db.Date, default=datetime.utcnow().date)
+    incident_time = db.Column(db.Time)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    location = db.Column(db.String(100))
+    severity = db.Column(db.String(20))  # minor, serious, critical
+    type = db.Column(db.String(50))  # near miss, first aid, injury, property damage
+    involved_parties = db.Column(db.Text)
+    witnesses = db.Column(db.Text)
+    actions_taken = db.Column(db.Text)
+    reported_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    reported_at = db.Column(db.DateTime, default=func.now())
+    
+    # Status fields
+    is_reviewed = db.Column(db.Boolean, default=False)
+    reviewed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    reviewed_at = db.Column(db.DateTime)
+    
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('safety_incidents', lazy='dynamic'))
+    reporter = db.relationship('User', foreign_keys=[reported_by])
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
+    comments = db.relationship('Comment', backref='safety_incident',
+                              primaryjoin="and_(Comment.record_type=='safety_incident', "
+                                         "Comment.record_id==SafetyIncident.id)")
+    attachments = db.relationship('Attachment', backref='safety_incident',
+                                 primaryjoin="and_(Attachment.record_type=='safety_incident', "
+                                            "Attachment.record_id==SafetyIncident.id)")
+    
+    def __repr__(self):
+        return f'<SafetyIncident {self.id} - {self.title}>'
+
+class DailyReportPhoto(db.Model):
+    """Photos attached to daily reports"""
+    __tablename__ = 'daily_report_photos'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=False)
+    file_path = db.Column(db.String(255), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    uploaded_at = db.Column(db.DateTime, default=func.now())
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    uploader = db.relationship('User', backref='uploaded_photos')
+    
+    def __repr__(self):
+        return f"<DailyReportPhoto {self.id}>"
+    
+    @property
+    def url(self):
+        from flask import url_for
+        return url_for('static', filename=f'uploads/{self.file_path}')
+
+
+class ManpowerEntry(db.Model):
+    """Manpower entries for daily reports"""
+    __tablename__ = 'manpower_entries'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=False)
+    company_name = db.Column(db.String(100), nullable=False)
+    trade = db.Column(db.String(100))
+    personnel_count = db.Column(db.Integer, default=0)
+    hours_worked = db.Column(db.Float, default=0)
+    work_description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=func.now())
+    
+    def __repr__(self):
+        return f"<ManpowerEntry {self.company_name}>"
+
+
+class WorkActivity(db.Model):
+    """Work activities tracked on the project"""
+    __tablename__ = 'work_activities'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    activity_type = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    location = db.Column(db.String(100))
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    percentage_complete = db.Column(db.Integer, default=0)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    project = db.relationship('Project', backref='work_activities')
+    creator = db.relationship('User', backref='created_activities')
+    
+    def __repr__(self):
+        return f"<WorkActivity {self.activity_type}>"
+
 
 class Photo(db.Model):
+    """Photo model for field documentation"""
     __tablename__ = 'photos'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    daily_report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'))
+    daily_report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=True)
+    filename = db.Column(db.String(255), nullable=False)
     title = db.Column(db.String(100))
     description = db.Column(db.Text)
     location = db.Column(db.String(100))
-    file_path = db.Column(db.String(255), nullable=False)
-    capture_date = db.Column(db.DateTime)
-    latitude = db.Column(db.Float)
-    longitude = db.Column(db.Float)
+    
+    # Metadata
     created_at = db.Column(db.DateTime, default=func.now())
-    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
     project = db.relationship('Project', backref='photos')
-    uploader = db.relationship('User', foreign_keys=[uploaded_by])
-    comments = db.relationship('Comment', backref='photo',
-                              primaryjoin="and_(Comment.record_type=='photo', "
-                                         "Comment.record_id==Photo.id)")
-
-class Schedule(db.Model):
-    __tablename__ = 'schedules'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    version = db.Column(db.String(20))
-    start_date = db.Column(db.Date)
-    end_date = db.Column(db.Date)
-    status = db.Column(db.String(20), default='draft')
-    file_path = db.Column(db.String(255))
-    notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
-    # Relationships
-    project = db.relationship('Project', backref='schedules')
     creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='schedule',
-                              primaryjoin="and_(Comment.record_type=='schedule', "
-                                         "Comment.record_id==Schedule.id)")
-    attachments = db.relationship('Attachment', backref='schedule',
-                                 primaryjoin="and_(Attachment.record_type=='schedule', "
-                                            "Attachment.record_id==Schedule.id)")
-
-class Checklist(db.Model):
-    __tablename__ = 'checklists'
     
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    checklist_type = db.Column(db.String(50))
-    location = db.Column(db.String(100))
-    status = db.Column(db.String(20), default='open')
-    percent_complete = db.Column(db.Integer, default=0)
-    due_date = db.Column(db.Date)
-    completion_date = db.Column(db.Date)
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
-    # Relationships
-    project = db.relationship('Project', backref='checklists')
-    creator = db.relationship('User', foreign_keys=[created_by])
-    items = db.relationship('ChecklistItem', backref='checklist', cascade='all, delete-orphan')
-    comments = db.relationship('Comment', backref='checklist',
-                              primaryjoin="and_(Comment.record_type=='checklist', "
-                                         "Comment.record_id==Checklist.id)")
-
-class ChecklistItem(db.Model):
-    __tablename__ = 'checklist_items'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    checklist_id = db.Column(db.Integer, db.ForeignKey('checklists.id'), nullable=False)
-    description = db.Column(db.String(255), nullable=False)
-    status = db.Column(db.String(20), default='pending')
-    completed = db.Column(db.Boolean, default=False)
-    completed_date = db.Column(db.Date)
-    completed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    notes = db.Column(db.Text)
-    
-    # Relationships
-    completer = db.relationship('User', foreign_keys=[completed_by])
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'daily_report_id': self.daily_report_id,
+            'filename': self.filename,
+            'title': self.title,
+            'description': self.description,
+            'location': self.location,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'created_by': self.created_by
+        }
 
 class Punchlist(db.Model):
+    """Punchlist model for tracking outstanding items"""
     __tablename__ = 'punchlists'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
+    punchlist_number = db.Column(db.String(50), unique=True)
+    title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    location = db.Column(db.String(100))
-    status = db.Column(db.String(20), default='open')
-    start_date = db.Column(db.Date, default=func.current_date())
-    due_date = db.Column(db.Date)
-    percent_complete = db.Column(db.Integer, default=0)
+    area = db.Column(db.String(100))
+    
+    # Metadata
     created_at = db.Column(db.DateTime, default=func.now())
     updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
@@ -148,102 +289,258 @@ class Punchlist(db.Model):
     project = db.relationship('Project', backref='punchlists')
     creator = db.relationship('User', foreign_keys=[created_by])
     items = db.relationship('PunchlistItem', backref='punchlist', cascade='all, delete-orphan')
-    comments = db.relationship('Comment', backref='punchlist',
-                              primaryjoin="and_(Comment.record_type=='punchlist', "
-                                         "Comment.record_id==Punchlist.id)")
+    
+    def __init__(self, **kwargs):
+        super(Punchlist, self).__init__(**kwargs)
+        if not self.punchlist_number:
+            self.punchlist_number = f"PL-{uuid.uuid4().hex[:8].upper()}"
 
 class PunchlistItem(db.Model):
+    """Individual item in a punchlist"""
     __tablename__ = 'punchlist_items'
     
     id = db.Column(db.Integer, primary_key=True)
     punchlist_id = db.Column(db.Integer, db.ForeignKey('punchlists.id'), nullable=False)
-    description = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(100))
-    responsible_company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    status = db.Column(db.String(20), default='open')
-    priority = db.Column(db.String(20), default='medium')
+    responsible_party = db.Column(db.String(100))
+    priority = db.Column(db.String(20), default='medium')  # low, medium, high, critical
     due_date = db.Column(db.Date)
-    completed_date = db.Column(db.Date)
-    verified_date = db.Column(db.Date)
-    verified_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    notes = db.Column(db.Text)
+    photo = db.Column(db.String(255))
+    status = db.Column(db.String(20), default='open')  # open, closed
+    
+    # Metadata
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    closed_at = db.Column(db.DateTime)
+    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
-    responsible_company = db.relationship('Company', foreign_keys=[responsible_company_id])
-    verifier = db.relationship('User', foreign_keys=[verified_by])
-    photos = db.relationship('PunchlistItemPhoto', backref='punchlist_item', cascade='all, delete-orphan')
+    creator = db.relationship('User', foreign_keys=[created_by])
+    closer = db.relationship('User', foreign_keys=[closed_by])
 
-class PunchlistItemPhoto(db.Model):
-    __tablename__ = 'punchlist_item_photos'
+class Checklist(db.Model):
+    """Checklist model for inspections and quality control"""
+    __tablename__ = 'checklists'
     
-    id = db.Column(db.Integer, primary_key=True)
-    punchlist_item_id = db.Column(db.Integer, db.ForeignKey('punchlist_items.id'), nullable=False)
-    file_path = db.Column(db.String(255), nullable=False)
-    photo_type = db.Column(db.String(20))  # 'before', 'after'
-    uploaded_at = db.Column(db.DateTime, default=func.now())
-    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    id = db.Column(db.Integer, primary key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    checklist_number = db.Column(db.String(50), unique=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    category = db.Column(db.String(50))
+    location = db.Column(db.String(100))
+    items = db.Column(db.Text)  # JSON list of items
+    
+    # Metadata
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
-    uploader = db.relationship('User', foreign_keys=[uploaded_by])
+    project = db.relationship('Project', backref='checklists')
+    creator = db.relationship('User', foreign_keys=[created_by])
+    
+    def __init__(self, **kwargs):
+        super(Checklist, self).__init__(**kwargs)
+        if not self.checklist_number:
+            self.checklist_number = f"CL-{uuid.uuid4().hex[:8].upper()}"
+        
+        # Convert items from text to JSON if needed
+        if 'items' in kwargs and isinstance(kwargs['items'], str):
+            items_list = [item.strip() for item in kwargs['items'].strip().split('\n') if item.strip()]
+            self.items = json.dumps(items_list)
+
+class Schedule(db.Model):
+    """Schedule model for field activities"""
+    __tablename__ = 'schedules'
+    
+    id = db.Column(db.Integer, primary key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    scheduled_date = db.Column(db.Date, nullable=False, index=True)
+    start_time = db.Column(db.Time)
+    end_time = db.Column(db.Time)
+    location = db.Column(db.String(100))
+    category = db.Column(db.String(50))  # meeting, inspection, milestone, etc.
+    priority = db.Column(db.String(20), default='medium')  # low, medium, high, critical
+    
+    # Metadata
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    project = db.relationship('Project', backref='schedules')
+    creator = db.relationship('User', foreign_keys=[created_by])
 
 class PullPlan(db.Model):
+    """Pull planning model for collaborative scheduling"""
     __tablename__ = 'pull_plans'
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
     location = db.Column(db.String(100))
-    milestone = db.Column(db.String(100))
-    description = db.Column(db.Text)
-    facilitator_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    status = db.Column(db.String(20), default='planned')
+    participants = db.Column(db.Text)  # JSON list of participants
+    activities = db.Column(db.Text)  # JSON representation of activities
+    
+    # Metadata
     created_at = db.Column(db.DateTime, default=func.now())
     updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
     project = db.relationship('Project', backref='pull_plans')
-    facilitator = db.relationship('User', foreign_keys=[facilitator_id])
     creator = db.relationship('User', foreign_keys=[created_by])
-    tasks = db.relationship('PullPlanTask', backref='pull_plan', cascade='all, delete-orphan')
-    comments = db.relationship('Comment', backref='pull_plan',
-                              primaryjoin="and_(Comment.record_type=='pull_plan', "
-                                         "Comment.record_id==PullPlan.id)")
-    attachments = db.relationship('Attachment', backref='pull_plan',
-                                 primaryjoin="and_(Attachment.record_type=='pull_plan', "
-                                            "Attachment.record_id==PullPlan.id)")
 
-class PullPlanTask(db.Model):
-    __tablename__ = 'pull_plan_tasks'
+class ManpowerEntry(db.Model):
+    __tablename__ = 'manpower_entries'
     
     id = db.Column(db.Integer, primary_key=True)
-    pull_plan_id = db.Column(db.Integer, db.ForeignKey('pull_plans.id'), nullable=False)
-    description = db.Column(db.String(255), nullable=False)
-    duration = db.Column(db.Integer)  # in days
-    start_date = db.Column(db.Date)
-    end_date = db.Column(db.Date)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    responsible_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    prerequisites = db.Column(db.Text)
-    status = db.Column(db.String(20), default='planned')
+    daily_report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=False)
+    company_name = db.Column(db.String(100), nullable=False)
+    trade = db.Column(db.String(100))
+    personnel_count = db.Column(db.Integer, default=0)
+    hours_worked = db.Column(db.Float, default=0.0)
+    work_description = db.Column(db.Text)
     
     # Relationships
-    company = db.relationship('Company', foreign_keys=[company_id])
-    responsible_user = db.relationship('User', foreign_keys=[responsible_user_id])
-    constraints = db.relationship('PullPlanConstraint', backref='task', cascade='all, delete-orphan')
+    daily_report = db.relationship('DailyReport', back_populates='manpower_entries')
+    
+    def __repr__(self):
+        return f'<ManpowerEntry {self.company_name} - {self.personnel_count} workers>'
 
-class PullPlanConstraint(db.Model):
-    __tablename__ = 'pull_plan_constraints'
+class FieldPhoto(db.Model):
+    __tablename__ = 'field_photos'
     
     id = db.Column(db.Integer, primary_key=True)
-    task_id = db.Column(db.Integer, db.ForeignKey('pull_plan_tasks.id'), nullable=False)
-    description = db.Column(db.String(255), nullable=False)
-    constraint_type = db.Column(db.String(50))
-    status = db.Column(db.String(20), default='active')
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    daily_report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'))
+    title = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    file_path = db.Column(db.String(255), nullable=False)
+    file_name = db.Column(db.String(255), nullable=False)
+    file_size = db.Column(db.Integer)  # in bytes
+    file_type = db.Column(db.String(50))
+    location = db.Column(db.String(255))
+    latitude = db.Column(db.Float)
+    longitude = db.Column(db.Float)
+    taken_at = db.Column(db.DateTime)
+    uploaded_at = db.Column(db.DateTime, default=func.now())
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    project = db.relationship('Project', backref='photos')
+    daily_report = db.relationship('DailyReport', back_populates='photos')
+    uploader = db.relationship('User', foreign_keys=[uploaded_by])
+    
+    def __repr__(self):
+        return f'<FieldPhoto {self.id} - {self.title}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'daily_report_id': self.daily_report_id,
+            'title': self.title,
+            'description': self.description,
+            'file_path': self.file_path,
+            'file_name': self.file_name,
+            'file_size': self.file_size,
+            'file_type': self.file_type,
+            'location': self.location,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'taken_at': self.taken_at.isoformat() if self.taken_at else None,
+            'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None
+        }
+    
+    @property
+    def url(self):
+        return f'/uploads/photos/{self.file_path}'
+
+class PunchlistItem(db.Model):
+    __tablename__ = 'punchlist_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    location = db.Column(db.String(255))
+    responsible_party = db.Column(db.String(100))
+    due_date = db.Column(db.Date)
+    priority = db.Column(db.String(20), default='medium')  # low, medium, high, critical
+    status = db.Column(db.String(20), default='open')  # open, in_progress, complete, verified
     created_at = db.Column(db.DateTime, default=func.now())
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    closed_at = db.Column(db.DateTime)
+    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
+    project = db.relationship('Project', backref='punchlist_items')
     creator = db.relationship('User', foreign_keys=[created_by])
+    comments = db.relationship('Comment', backref='punchlist_item',
+                             primaryjoin="and_(Comment.record_type=='punchlist_item', "
+                                        "Comment.record_id==PunchlistItem.id)")
+    photos = db.relationship('FieldPhoto', secondary='punchlist_photos',
+                           backref=db.backref('punchlist_items'))
+    
+    def __repr__(self):
+        return f'<PunchlistItem {self.id} - {self.title}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'title': self.title,
+            'description': self.description,
+            'location': self.location,
+            'responsible_party': self.responsible_party,
+            'due_date': self.due_date.isoformat() if self.due_date else None,
+            'priority': self.priority,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_by': self.created_by
+        }
+
+# Association table for punchlist items and photos
+punchlist_photos = db.Table('punchlist_photos',
+    db.Column('punchlist_item_id', db.Integer, db.ForeignKey('punchlist_items.id'), primary_key=True),
+    db.Column('field_photo_id', db.Integer, db.ForeignKey('field_photos.id'), primary_key=True)
+)
+
+class FieldInspection(db.Model):
+    __tablename__ = 'field_inspections'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    inspection_date = db.Column(db.Date, nullable=False)
+    inspection_type = db.Column(db.String(100), nullable=False)
+    inspector = db.Column(db.String(100))
+    agency = db.Column(db.String(100))
+    result = db.Column(db.String(20))  # pass, pass_with_comments, fail
+    notes = db.Column(db.Text)
+    followup_required = db.Column(db.Boolean, default=False)
+    followup_date = db.Column(db.Date)
+    created_at = db.Column(db.DateTime, default=func.now())
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Relationships
+    project = db.relationship('Project', backref='inspections')
+    creator = db.relationship('User', foreign_keys=[created_by])
+    attachments = db.relationship('Attachment', backref='inspection',
+                                primaryjoin="and_(Attachment.record_type=='field_inspection', "
+                                           "Attachment.record_id==FieldInspection.id)")
+    
+    def __repr__(self):
+        return f'<FieldInspection {self.inspection_type} - {self.inspection_date}>'

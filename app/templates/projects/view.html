@@ -1,0 +1,266 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ project.name }} - Project Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ project.name }}</h1>
+            <p class="text-muted">{{ project.number }}</p>
+        </div>
+        <div>
+            {% if current_user.is_admin() or is_project_manager %}
+            <a href="{{ url_for('projects.edit', id=project.id) }}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Edit Project
+            </a>
+            {% endif %}
+            <a href="{{ url_for('projects.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Projects
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left column - Project details -->
+        <div class="col-md-8">
+            <!-- Basic info card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Project Details</h6>
+                    <span class="badge {% if project.status == 'active' %}bg-success{% elif project.status == 'planning' %}bg-info{% elif project.status == 'on_hold' %}bg-warning{% elif project.status == 'completed' %}bg-secondary{% elif project.status == 'cancelled' %}bg-danger{% else %}bg-dark{% endif %}">
+                        {{ project.status|title }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Project Type:</div>
+                        <div class="col-md-9">{{ project.project_type|title if project.project_type else '--' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Category:</div>
+                        <div class="col-md-9">{{ project.category|replace('_', ' ')|title if project.category else '--' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Description:</div>
+                        <div class="col-md-9">{{ project.description or '--' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Client:</div>
+                        <div class="col-md-9">{{ project.client_name or '--' }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-bold">Client Contact:</div>
+                        <div class="col-md-9 whitespace-pre-line">{{ project.client_contact_info or '--' }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Timeline</h6>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% if project.start_date %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Start Date</h6>
+                                <p class="timeline-date">{{ project.start_date.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if project.target_completion_date %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker {% if project.target_completion_date < today %}bg-warning{% else %}bg-info{% endif %}"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Target Completion</h6>
+                                <p class="timeline-date">{{ project.target_completion_date.strftime('%B %d, %Y') }}</p>
+                                {% if project.target_completion_date < today and not project.actual_completion_date %}
+                                <span class="badge bg-warning">Overdue</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if project.actual_completion_date %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Actual Completion</h6>
+                                <p class="timeline-date">{{ project.actual_completion_date.strftime('%B %d, %Y') }}</p>
+                                {% if project.target_completion_date and project.actual_completion_date > project.target_completion_date %}
+                                <span class="badge bg-warning">Completed {{ (project.actual_completion_date - project.target_completion_date).days }} days late</span>
+                                {% elif project.target_completion_date %}
+                                <span class="badge bg-success">Completed on time</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if project.status == 'on_hold' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Project On Hold</h6>
+                                <p class="timeline-date">{{ project.updated_at.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if project.status == 'cancelled' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-danger"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Project Cancelled</h6>
+                                <p class="timeline-date">{{ project.updated_at.strftime('%B %d, %Y') }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Financial Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Contract Amount:</div>
+                        <div class="col-md-8">{{ "$%,.2f"|format(project.contract_amount) if project.contract_amount else '--' }}</div>
+                    </div>
+                    {% if project.contract_document_filename %}
+                    <div class="row mb-3">
+                        <div class="col-md-4 fw-bold">Contract Document:</div>
+                        <div class="col-md-8">
+                            <a href="{{ url_for('projects.download_document', id=project.id, document_type='contract') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-text"></i> {{ project.contract_document_filename }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Notes card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Project Notes</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('projects.add_note', id=project.id) }}" class="mb-4">
+                        {{ note_form.hidden_tag() }}
+                        <div class="form-group mb-3">
+                            {{ note_form.content(class="form-control", placeholder="Add a note about this project...") }}
+                            {% if note_form.content.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in note_form.content.errors %}
+                                <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Note</button>
+                    </form>
+                    
+                    {% if project.notes %}
+                    <ul class="list-group">
+                        {% for note in project.notes %}
+                        <li class="list-group-item">
+                            <p class="mb-1">{{ note.content }}</p>
+                            <small class="text-muted">Added by {{ note.user.name }} on {{ note.created_at.strftime('%B %d, %Y') }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="alert alert-info">No notes added yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right column - Project team and details -->
+        <div class="col-md-4">
+            <!-- Project team card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Project Team</h6>
+                </div>
+                <div class="card-body">
+                    {% if project_users %}
+                    <ul class="list-group">
+                        {% for pu in project_users %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ pu.user.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ pu.role.title() }}</small>
+                            </div>
+                            {% if can_edit %}
+                            <form method="post" action="{{ url_for('projects.remove_user', project_id=project.id, user_id=pu.user_id) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this user from the project?')">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% if can_edit %}
+                    <div class="mt-3">
+                        <a href="{{ url_for('projects.manage_users', id=project.id) }}" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="bi bi-people"></i> Manage Team
+                        </a>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        No team members assigned yet.
+                        {% if can_edit %}
+                        <a href="{{ url_for('projects.manage_users', id=project.id) }}">Add team members</a>.
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Project details card -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Project Details</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Created
+                            <span>{{ project.created_at.strftime('%Y-%m-%d') }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Last Updated
+                            <span>{{ project.updated_at.strftime('%Y-%m-%d') }}</span>
+                        </li>
+                    </ul>
+                    
+                    <div class="mt-3 d-grid gap-2">
+                        {% if can_edit %}
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-file-earmark-text"></i> Documents
+                        </a>
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-calendar-check"></i> Daily Reports
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

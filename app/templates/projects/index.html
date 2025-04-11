@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Projects</h1>
+        {% if current_user.can(permission['CREATE']) %}
+        <a href="{{ url_for('projects.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> New Project
+        </a>
+        {% endif %}
+    </div>
+    
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    {{ form.status.label(class="form-label") }}
+                    {{ form.status(class="form-select") }}
+                </div>
+                <div class="col-md-3">
+                    {{ form.project_type.label(class="form-label") }}
+                    {{ form.project_type(class="form-select") }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.search.label(class="form-label") }}
+                    {{ form.search(class="form-control", placeholder="Search projects...") }}
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Projects Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">
+                Project List 
+                <span class="badge bg-secondary">{{ projects.total }}</span>
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if projects.items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Project Number</th>
+                            <th>Project Name</th>
+                            <th>Client</th>
+                            <th>Status</th>
+                            <th>Start Date</th>
+                            <th>Target Completion</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects.items %}
+                        <tr>
+                            <td>{{ project.id }}</td>
+                            <td>{{ project.number }}</td>
+                            <td>{{ project.name }}</td>
+                            <td>{{ project.client_name or '--' }}</td>
+                            <td>
+                                {% if project.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif project.status == 'planning' %}
+                                <span class="badge bg-info">Planning</span>
+                                {% elif project.status == 'on_hold' %}
+                                <span class="badge bg-warning">On Hold</span>
+                                {% elif project.status == 'completed' %}
+                                <span class="badge bg-secondary">Completed</span>
+                                {% elif project.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                                {% else %}
+                                <span class="badge bg-dark">{{ project.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ project.start_date or '--' }}</td>
+                            <td>{{ project.target_completion_date or '--' }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('projects.view', id=project.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if current_user.is_admin() or project_managers.get(project.id) == current_user.id %}
+                                    <a href="{{ url_for('projects.edit', id=project.id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not projects.has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('projects.index', page=projects.prev_num, status=form.status.data, project_type=form.project_type.data, search=form.search.data) }}">
+                            Previous
+                        </a>
+                    </li>
+                    
+                    {% for page_num in projects.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == projects.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('projects.index', page=page_num, status=form.status.data, project_type=form.project_type.data, search=form.search.data) }}">
+                                    {{ page_num }}
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <li class="page-item {% if not projects.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('projects.index', page=projects.next_num, status=form.status.data, project_type=form.project_type.data, search=form.search.data) }}">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No projects found matching your criteria.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

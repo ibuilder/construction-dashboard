@@ -1,0 +1,346 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Project{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Create Project</h1>
+        <div>
+            <a href="{{ url_for('projects.index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Projects
+            </a>
+        </div>
+    </div>
+    
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">New Project Details</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                
+                <div class="row">
+                    <!-- Basic Information -->
+                    <div class="col-lg-8">
+                        <h5 class="mb-3">Basic Information</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.number.label(class="form-label") }}
+                                    {{ form.number(class="form-control") }}
+                                    {% if form.number.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.number.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows=4) }}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.status.label(class="form-label") }}
+                                    {{ form.status(class="form-select") }}
+                                    {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.status.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.client_name.label(class="form-label") }}
+                                    {{ form.client_name(class="form-control") }}
+                                    {% if form.client_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.client_name.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.client_contact_info.label(class="form-label") }}
+                            {{ form.client_contact_info(class="form-control", rows=3) }}
+                            {% if form.client_contact_info.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.client_contact_info.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <h5 class="mb-3 mt-4">Dates</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.start_date.label(class="form-label") }}
+                                    {{ form.start_date(class="form-control", type="date") }}
+                                    {% if form.start_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.start_date.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.target_completion_date.label(class="form-label") }}
+                                    {{ form.target_completion_date(class="form-control", type="date") }}
+                                    {% if form.target_completion_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.target_completion_date.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.actual_completion_date.label(class="form-label") }}
+                                    {{ form.actual_completion_date(class="form-control", type="date") }}
+                                    {% if form.actual_completion_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.actual_completion_date.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3 mt-4">Financial</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.contract_amount.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.contract_amount(class="form-control") }}
+                                    </div>
+                                    {% if form.contract_amount.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.contract_amount.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3 mt-4">Project Classification</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.project_type.label(class="form-label") }}
+                                    {{ form.project_type(class="form-select") }}
+                                    {% if form.project_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.project_type.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.category.label(class="form-label") }}
+                                    {{ form.category(class="form-select") }}
+                                    {% if form.category.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.category.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location Information -->
+                    <div class="col-lg-4">
+                        <h5 class="mb-3">Location</h5>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.address.label(class="form-label") }}
+                            {{ form.address(class="form-control") }}
+                            {% if form.address.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.address.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    {{ form.city.label(class="form-label") }}
+                                    {{ form.city(class="form-control") }}
+                                    {% if form.city.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.city.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.state.label(class="form-label") }}
+                                    {{ form.state(class="form-control") }}
+                                    {% if form.state.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.state.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.zip_code.label(class="form-label") }}
+                                    {{ form.zip_code(class="form-control") }}
+                                    {% if form.zip_code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.zip_code.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.country.label(class="form-label") }}
+                                    {{ form.country(class="form-control") }}
+                                    {% if form.country.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.country.errors %}
+                                        <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mb-3 mt-4">Documents</h5>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.contract_document.label(class="form-label") }}
+                            {{ form.contract_document(class="form-control") }}
+                            {% if form.contract_document.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.contract_document.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Accept PDF and Word documents</div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.project_images.label(class="form-label") }}
+                            {{ form.project_images(class="form-control") }}
+                            {% if form.project_images.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.project_images.errors %}
+                                <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="form-text">Accept JPG, JPEG and PNG images</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-check-lg"></i> Create Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add any form validation or dynamic behavior here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Generate project number if empty
+        const nameField = document.getElementById('name');
+        const numberField = document.getElementById('number');
+        
+        nameField.addEventListener('blur', function() {
+            if (numberField.value === '' && nameField.value !== '') {
+                // Create a project number based on name (first letters + timestamp)
+                const initials = nameField.value
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .toUpperCase();
+                const timestamp = new Date().getTime().toString().slice(-4);
+                numberField.value = `PRJ-${initials}-${timestamp}`;
+            }
+        });
+    });
+</script>
+{% endblock %}

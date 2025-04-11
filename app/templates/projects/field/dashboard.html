@@ -1,0 +1,242 @@
+{% extends "layout.html" %}
+
+{% block title %}Field Dashboard - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">Field Dashboard: {{ project.name }}</h1>
+        <div>
+            <a href="{{ url_for('projects.view', id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Project
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Daily Reports</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ daily_reports_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.field.daily_reports', project_id=project.id) }}" class="text-primary">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Photos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ photos_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-images fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.field.photos', project_id=project.id) }}" class="text-success">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Safety Incidents</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-shield-exclamation fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="#" class="text-warning">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Project Completion</div>
+                            <div class="row no-gutters align-items-center">
+                                <div class="col-auto">
+                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">40%</div>
+                                </div>
+                                <div class="col">
+                                    <div class="progress progress-sm mr-2">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-data fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="#" class="text-info">Details</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row -->
+    <div class="row">
+        <!-- Recent Daily Reports -->
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Daily Reports</h6>
+                    <a href="{{ url_for('projects.field.create_daily_report', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-lg"></i> New Report
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_reports %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Report #</th>
+                                        <th>Weather</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in recent_reports %}
+                                    <tr>
+                                        <td>{{ report.report_date.strftime('%m/%d/%Y') }}</td>
+                                        <td>{{ report.report_number }}</td>
+                                        <td>
+                                            <span class="weather-icon">
+                                                {% if report.weather_condition == 'sunny' %}
+                                                    <i class="bi bi-sun text-warning"></i>
+                                                {% elif report.weather_condition == 'partly_cloudy' %}
+                                                    <i class="bi bi-cloud-sun text-secondary"></i>
+                                                {% elif report.weather_condition == 'cloudy' %}
+                                                    <i class="bi bi-cloud text-secondary"></i>
+                                                {% elif report.weather_condition == 'rainy' %}
+                                                    <i class="bi bi-cloud-rain text-info"></i>
+                                                {% elif report.weather_condition == 'stormy' %}
+                                                    <i class="bi bi-cloud-lightning text-danger"></i>
+                                                {% else %}
+                                                    <i class="bi bi-question-circle text-muted"></i>
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if report.is_submitted %}
+                                                <span class="badge bg-success">Submitted</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Draft</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('projects.field.view_daily_report', project_id=project.id, report_id=report.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center py-3">No daily reports yet. 
+                            <a href="{{ url_for('projects.field.create_daily_report', project_id=project.id) }}">Create your first report</a>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue Punchlist Items -->
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-danger">Overdue Punchlist Items</h6>
+                    <a href="{{ url_for('projects.field.punchlists', project_id=project.id) }}" class="btn btn-sm btn-danger">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if overdue_items %}
+                        <div class="list-group">
+                            {% for item in overdue_items %}
+                                <a href="{{ url_for('projects.field.view_punchlist', project_id=project.id, item_id=item.id) }}" 
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ item.title }}</h6>
+                                        <small class="text-danger">Due: {{ item.due_date.strftime('%m/%d/%Y') }}</small>
+                                    </div>
+                                    <p class="mb-1 text-truncate">{{ item.location }}</p>
+                                    <small>{{ item.responsible_party }}</small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center py-3">No overdue punchlist items.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Photos Gallery -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-success">Recent Photos</h6>
+            <a href="{{ url_for('projects.field.photos', project_id=project.id) }}" class="btn btn-sm btn-success">
+                <i class="bi bi-images"></i> View All Photos
+            </a>
+        </div>
+        <div class="card-body">
+            {% if recent_photos %}
+                <div class="row">
+                    {% for photo in recent_photos %}
+                        <div class="col-md-3 col-sm-6 mb-4">
+                            <div class="card h-100">
+                                <a href="{{ url_for('static', filename='uploads/' + photo.file_path) }}" target="_blank">
+                                    <img src="{{ url_for('static', filename='uploads/' + photo.file_path) }}" 
+                                         class="card-img-top img-fluid" alt="{{ photo.title or 'Project photo' }}">
+                                </a>
+                                <div class="card-body p-2">
+                                    <p class="card-text small mb-0">{{ photo.title or 'Untitled' }}</p>
+                                    <small class="text-muted">{{ photo.uploaded_at.strftime('%m/%d/%Y') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-center py-3">No photos uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
