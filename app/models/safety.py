@@ -1,173 +1,331 @@
-from app.extensions import db
 from datetime import datetime
+from app.extensions import db
 from sqlalchemy.sql import func
-from app.models.base import Comment, Attachment
+from enum import Enum
+
+class SafetySeverity(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+class SafetyStatus(str, Enum):
+    DRAFT = "draft"
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    CLOSED = "closed"
+    VERIFIED = "verified"
+
+class IncidentType(str, Enum):
+    NEAR_MISS = "near_miss"
+    FIRST_AID = "first_aid"
+    MEDICAL_TREATMENT = "medical_treatment"
+    LOST_TIME = "lost_time"
+    FATALITY = "fatality"
+    PROPERTY_DAMAGE = "property_damage"
+    ENVIRONMENTAL = "environmental"
+    VEHICLE = "vehicle"
+    OTHER = "other"
+
+class ObservationType(str, Enum):
+    UNSAFE_ACT = "unsafe_act"
+    UNSAFE_CONDITION = "unsafe_condition"
+    ENVIRONMENTAL = "environmental"
+    NEAR_MISS = "near_miss"
+    SAFETY_VIOLATION = "safety_violation"
+    POSITIVE_OBSERVATION = "positive_observation"
+    OTHER = "other"
 
 class SafetyObservation(db.Model):
+    """Safety observations recorded on site"""
     __tablename__ = 'safety_observations'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    observation_date = db.Column(db.Date, nullable=False, default=func.current_date())
-    location = db.Column(db.String(100))
+    title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
-    observation_type = db.Column(db.String(50))  # positive, negative, etc.
-    risk_level = db.Column(db.String(20))  # high, medium, low
+    observation_date = db.Column(db.Date, default=datetime.utcnow().date)
+    location = db.Column(db.String(100))
+    category = db.Column(db.String(50))
+    severity = db.Column(db.String(20))
     status = db.Column(db.String(20), default='open')
+    
+    # Actions and follow up
     corrective_action = db.Column(db.Text)
     due_date = db.Column(db.Date)
     closed_date = db.Column(db.Date)
     closed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    created_at = db.Column(db.DateTime, default=func.now())
+    
+    # Meta information
+    observed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    project = db.relationship('Project', backref='safety_observations')
-    creator = db.relationship('User', foreign_keys=[created_by])
-    closer = db.relationship('User', foreign_keys=[closed_by])
-    company = db.relationship('Company', foreign_keys=[company_id])
-    comments = db.relationship('Comment', backref='safety_observation',
-                              primaryjoin="and_(Comment.record_type=='safety_observation', "
-                                         "Comment.record_id==SafetyObservation.id)")
-    attachments = db.relationship('Attachment', backref='safety_observation',
-                                 primaryjoin="and_(Attachment.record_type=='safety_observation', "
-                                            "Attachment.record_id==SafetyObservation.id)")
+    project = db.relationship('Project', backref=db.backref('safety_observations', lazy='dynamic'))
+    observer = db.relationship('User', foreign_keys=[observed_by], backref='observations')
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_observations')
+    closer = db.relationship('User', foreign_keys=[closed_by], backref='closed_observations')
+    photos = db.relationship('SafetyPhoto', backref='observation', lazy='dynamic',
+                           primaryjoin="and_(SafetyPhoto.record_type=='observation', "
+                                      "SafetyPhoto.record_id==SafetyObservation.id)")
+    
+    def __repr__(self):
+        return f'<SafetyObservation {self.id}: {self.title}>'
 
-class PreTaskPlan(db.Model):
-    __tablename__ = 'pre_task_plans'
+class IncidentReport(db.Model):
+    """Safety incident reports"""
+    __tablename__ = 'incident_reports'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    task_date = db.Column(db.Date, nullable=False)
-    task_name = db.Column(db.String(200), nullable=False)
+    incident_number = db.Column(db.String(50), unique=True)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    incident_date = db.Column(db.Date, default=datetime.utcnow().date)
+    incident_time = db.Column(db.Time)
     location = db.Column(db.String(100))
-    description = db.Column(db.Text)
-    hazards_identified = db.Column(db.Text)
-    safety_measures = db.Column(db.Text)
-    required_ppe = db.Column(db.Text)
-    tools_equipment = db.Column(db.Text)
-    first_aid_location = db.Column(db.String(100))
-    emergency_procedures = db.Column(db.Text)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    foreman_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    status = db.Column(db.String(20), default='draft')
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Classification
+    incident_type = db.Column(db.String(50))
+    severity = db.Column(db.String(20))
+    
+    # Details
+    injured_person = db.Column(db.String(100))
+    injured_person_company = db.Column(db.String(100))
+    body_part = db.Column(db.String(50))
+    injury_type = db.Column(db.String(50))
+    treatment = db.Column(db.String(100))
+    work_related = db.Column(db.Boolean, default=True)
+    spill_type = db.Column(db.String(100))
+    spill_amount = db.Column(db.String(50))
+    containment_measures = db.Column(db.Text)
+    property_damaged = db.Column(db.String(100))
+    damage_description = db.Column(db.Text)
+    estimated_cost = db.Column(db.Float)
+    
+    # Recordability & reporting
+    is_recordable = db.Column(db.Boolean, default=False)
+    is_lost_time = db.Column(db.Boolean, default=False)
+    days_restricted = db.Column(db.Integer, default=0)
+    days_away = db.Column(db.Integer, default=0)
+    
+    # Root cause analysis
+    immediate_causes = db.Column(db.Text)
+    root_causes = db.Column(db.Text)
+    corrective_actions = db.Column(db.Text)
+    
+    # Status
+    status = db.Column(db.String(20), default='open')
+    reported_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    investigated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    investigation_date = db.Column(db.Date)
+    investigation_report = db.Column(db.Text)
     
     # Relationships
-    project = db.relationship('Project', backref='pre_task_plans')
-    company = db.relationship('Company', foreign_keys=[company_id])
-    foreman = db.relationship('User', foreign_keys=[foreman_id])
-    creator = db.relationship('User', foreign_keys=[created_by])
-    workers = db.relationship('PreTaskPlanWorker', backref='pre_task_plan', cascade='all, delete-orphan')
-    comments = db.relationship('Comment', backref='pre_task_plan',
-                              primaryjoin="and_(Comment.record_type=='pre_task_plan', "
-                                         "Comment.record_id==PreTaskPlan.id)")
-    attachments = db.relationship('Attachment', backref='pre_task_plan',
-                                 primaryjoin="and_(Attachment.record_type=='pre_task_plan', "
-                                            "Attachment.record_id==PreTaskPlan.id)")
+    project = db.relationship('Project', backref=db.backref('incidents', lazy='dynamic'))
+    reporter = db.relationship('User', foreign_keys=[reported_by], backref='reported_incidents')
+    investigator = db.relationship('User', foreign_keys=[investigated_by], backref='investigated_incidents')
+    photos = db.relationship('IncidentPhoto', backref='incident', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<IncidentReport {self.incident_number}: {self.title}>'
 
-class PreTaskPlanWorker(db.Model):
-    __tablename__ = 'pre_task_plan_workers'
+class IncidentPhoto(db.Model):
+    """Photos attached to incident reports"""
+    __tablename__ = 'incident_photos'
     
     id = db.Column(db.Integer, primary_key=True)
-    pre_task_plan_id = db.Column(db.Integer, db.ForeignKey('pre_task_plans.id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
-    signature = db.Column(db.Boolean, default=False)
-    signed_at = db.Column(db.DateTime)
+    incident_id = db.Column(db.Integer, db.ForeignKey('incident_reports.id'), nullable=False)
+    file_path = db.Column(db.String(255), nullable=False)
+    caption = db.Column(db.String(255))
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    uploader = db.relationship('User', backref='uploaded_incident_photos')
+    
+    def __repr__(self):
+        return f'<IncidentPhoto {self.id} for Incident {self.incident_id}>'
+
+class SafetyPhoto(db.Model):
+    """Photos attached to various safety records"""
+    __tablename__ = 'safety_photos'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    record_type = db.Column(db.String(50), nullable=False)  # 'observation', 'jha', etc.
+    record_id = db.Column(db.Integer, nullable=False)
+    file_name = db.Column(db.String(255))
+    file_path = db.Column(db.String(255), nullable=False)
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    uploader = db.relationship('User', backref='uploaded_safety_photos')
+    
+    def __repr__(self):
+        return f'<SafetyPhoto {self.id} for {self.record_type} {self.record_id}>'
 
 class JobHazardAnalysis(db.Model):
+    """Job hazard analysis (JHA)"""
     __tablename__ = 'job_hazard_analyses'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    jha_number = db.Column(db.String(20))
-    task = db.Column(db.String(200), nullable=False)
+    jha_number = db.Column(db.String(50), unique=True)
+    title = db.Column(db.String(100), nullable=False)
+    job_description = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(100))
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    description = db.Column(db.Text)
-    personal_protective_equipment = db.Column(db.Text)
-    training_required = db.Column(db.Text)
-    tools_equipment = db.Column(db.Text)
-    permits_required = db.Column(db.Text)
-    reference_documents = db.Column(db.Text)
-    prepared_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    reviewed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    company = db.Column(db.String(100))
+    required_ppe = db.Column(db.Text)
+    required_training = db.Column(db.Text)
+    required_permits = db.Column(db.Text)
+    special_equipment = db.Column(db.Text)
+    
+    # Approval
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     approved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    status = db.Column(db.String(20), default='draft')
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    approval_date = db.Column(db.Date)
     
     # Relationships
-    project = db.relationship('Project', backref='job_hazard_analyses')
-    company = db.relationship('Company', foreign_keys=[company_id])
-    preparer = db.relationship('User', foreign_keys=[prepared_by])
-    reviewer = db.relationship('User', foreign_keys=[reviewed_by])
-    approver = db.relationship('User', foreign_keys=[approved_by])
-    steps = db.relationship('JHAStep', backref='jha', cascade='all, delete-orphan')
-    comments = db.relationship('Comment', backref='jha',
-                              primaryjoin="and_(Comment.record_type=='job_hazard_analysis', "
-                                         "Comment.record_id==JobHazardAnalysis.id)")
-    attachments = db.relationship('Attachment', backref='jha',
-                                 primaryjoin="and_(Attachment.record_type=='job_hazard_analysis', "
-                                            "Attachment.record_id==JobHazardAnalysis.id)")
+    project = db.relationship('Project', backref=db.backref('job_hazard_analyses', lazy='dynamic'))
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_jhas')
+    approver = db.relationship('User', foreign_keys=[approved_by], backref='approved_jhas')
+    steps = db.relationship('JHAStep', backref='jha', order_by='JHAStep.step_number', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<JobHazardAnalysis {self.jha_number}: {self.title}>'
 
 class JHAStep(db.Model):
+    """Individual steps in a job hazard analysis"""
     __tablename__ = 'jha_steps'
     
     id = db.Column(db.Integer, primary_key=True)
     jha_id = db.Column(db.Integer, db.ForeignKey('job_hazard_analyses.id'), nullable=False)
     step_number = db.Column(db.Integer)
-    task_step = db.Column(db.String(255), nullable=False)
+    job_step = db.Column(db.Text, nullable=False)
     hazards = db.Column(db.Text, nullable=False)
     controls = db.Column(db.Text, nullable=False)
+    
+    def __repr__(self):
+        return f'<JHAStep {self.step_number} for JHA {self.jha_id}>'
 
-class EmployeeOrientation(db.Model):
-    __tablename__ = 'employee_orientations'
+class PreTaskPlan(db.Model):
+    """Pre-task safety planning"""
+    __tablename__ = 'pretask_plans'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    employee_name = db.Column(db.String(100), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    date_of_orientation = db.Column(db.Date, nullable=False)
-    employee_signature = db.Column(db.Boolean, default=False)
-    trade = db.Column(db.String(50))
-    emergency_contact = db.Column(db.String(100))
-    emergency_contact_phone = db.Column(db.String(20))
-    orientation_conducted_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    topics_covered = db.Column(db.Text)
-    badge_number = db.Column(db.String(20))
-    status = db.Column(db.String(20), default='active')
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    plan_number = db.Column(db.String(50), unique=True)
+    title = db.Column(db.String(100), nullable=False)
+    task_description = db.Column(db.Text, nullable=False)
+    date = db.Column(db.Date, default=datetime.utcnow().date)
+    location = db.Column(db.String(100))
+    company = db.Column(db.String(100))
+    
+    hazards_identified = db.Column(db.Text)
+    safety_concerns = db.Column(db.Text)
+    required_ppe = db.Column(db.Text)
+    tools_equipment = db.Column(db.Text)
+    emergency_procedures = db.Column(db.Text)
+    
+    supervisor_name = db.Column(db.String(100))
+    supervisor_signature = db.Column(db.Boolean, default=False)
+    
+    # Tracking
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    project = db.relationship('Project', backref='employee_orientations')
-    company = db.relationship('Company', foreign_keys=[company_id])
-    conductor = db.relationship('User', foreign_keys=[orientation_conducted_by])
-    certifications = db.relationship('EmployeeCertification', backref='orientation', cascade='all, delete-orphan')
-    comments = db.relationship('Comment', backref='employee_orientation',
-                              primaryjoin="and_(Comment.record_type=='employee_orientation', "
-                                         "Comment.record_id==EmployeeOrientation.id)")
-    attachments = db.relationship('Attachment', backref='employee_orientation',
-                                 primaryjoin="and_(Attachment.record_type=='employee_orientation', "
-                                            "Attachment.record_id==EmployeeOrientation.id)")
+    project = db.relationship('Project', backref=db.backref('pretask_plans', lazy='dynamic'))
+    creator = db.relationship('User', backref='created_pretask_plans')
+    attendees = db.relationship('PreTaskAttendee', backref='plan', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<PreTaskPlan {self.plan_number}: {self.title}>'
 
-class EmployeeCertification(db.Model):
-    __tablename__ = 'employee_certifications'
+class PreTaskAttendee(db.Model):
+    """Attendees of pre-task safety planning meetings"""
+    __tablename__ = 'pretask_attendees'
     
     id = db.Column(db.Integer, primary_key=True)
-    orientation_id = db.Column(db.Integer, db.ForeignKey('employee_orientations.id'), nullable=False)
-    certification_type = db.Column(db.String(100), nullable=False)
-    certificate_number = db.Column(db.String(50))
-    issue_date = db.Column(db.Date)
-    expiration_date = db.Column(db.Date)
-    issuing_authority = db.Column(db.String(100))
-    verified = db.Column(db.Boolean, default=False)
-    verified_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    verified_date = db.Column(db.Date)
+    pre_task_plan_id = db.Column(db.Integer, db.ForeignKey('pretask_plans.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    company = db.Column(db.String(100))
+    signature = db.Column(db.Boolean, default=False)
+    
+    def __repr__(self):
+        return f'<PreTaskAttendee {self.name} for Plan {self.pre_task_plan_id}>'
+
+class SafetyOrientation(db.Model):
+    """Safety orientation sessions"""
+    __tablename__ = 'safety_orientations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    orientation_number = db.Column(db.String(50), unique=True)
+    title = db.Column(db.String(100), nullable=False)
+    date = db.Column(db.Date, default=datetime.utcnow().date)
+    location = db.Column(db.String(100))
+    topics = db.Column(db.Text)
+    presenter = db.Column(db.String(100))
+    
+    # Tracking
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    verifier = db.relationship('User', foreign_keys=[verified_by])
+    project = db.relationship('Project', backref=db.backref('safety_orientations', lazy='dynamic'))
+    creator = db.relationship('User', backref='created_orientations')
+    attendees = db.relationship('OrientationAttendee', backref='orientation', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<SafetyOrientation {self.orientation_number}: {self.title}>'
+
+class OrientationAttendee(db.Model):
+    """Attendees of safety orientation sessions"""
+    __tablename__ = 'orientation_attendees'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    orientation_id = db.Column(db.Integer, db.ForeignKey('safety_orientations.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    company = db.Column(db.String(100))
+    trade = db.Column(db.String(100))
+    
+    def __repr__(self):
+        return f'<OrientationAttendee {self.name} for Orientation {self.orientation_id}>'
+
+class SafetyMetrics(db.Model):
+    """Monthly safety metrics"""
+    __tablename__ = 'safety_metrics'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    date = db.Column(db.Date)  # First day of month
+    
+    # Monthly stats
+    man_hours = db.Column(db.Integer, default=0)
+    recordable_incidents = db.Column(db.Integer, default=0)
+    lost_time_incidents = db.Column(db.Integer, default=0)
+    first_aid_incidents = db.Column(db.Integer, default=0)
+    near_miss_incidents = db.Column(db.Integer, default=0)
+    
+    # Calculated rates
+    trir = db.Column(db.Float, default=0.0)  # Total Recordable Incident Rate
+    ltir = db.Column(db.Float, default=0.0)  # Lost Time Incident Rate
+    
+    # Tracking
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('safety_metrics', lazy='dynamic'))
+    creator = db.relationship('User', backref='created_safety_metrics')
+    
+    def __repr__(self):
+        return f'<SafetyMetrics for {self.project_id} - {self.date}>'

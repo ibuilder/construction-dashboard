@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Task View</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Pre-Task Plan Details</h1>
+        <h2>{{ pretask.title }}</h2>
+        <p><strong>Description:</strong> {{ pretask.description }}</p>
+        <p><strong>Date:</strong> {{ pretask.date }}</p>
+        <p><strong>Location:</strong> {{ pretask.location }}</p>
+        <p><strong>Participants:</strong> {{ pretask.participants }}</p>
+        
+        <h3>Safety Observations</h3>
+        <ul>
+            {% for observation in pretask.observations %}
+                <li>{{ observation.title }} - {{ observation.status }}</li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('projects.safety.pretask.list') }}" class="btn btn-primary">Back to Pre-Task List</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

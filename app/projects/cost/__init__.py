@@ -1,5 +1,5 @@
 from flask import Blueprint
 
-cost_bp = Blueprint('cost', __name__, template_folder='templates')
+safety_bp = Blueprint('safety', __name__, template_folder='templates')
 
 from . import routes

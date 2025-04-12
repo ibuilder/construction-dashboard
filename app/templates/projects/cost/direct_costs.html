@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Costs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Direct Costs</h1>
+        <p>Manage and track direct costs associated with the construction project.</p>
+
+        <div class="mb-3">
+            <a href="{{ url_for('projects.cost.create_direct_cost') }}" class="btn btn-primary">Add Direct Cost</a>
+        </div>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cost in direct_costs %}
+                <tr>
+                    <td>{{ cost.id }}</td>
+                    <td>{{ cost.description }}</td>
+                    <td>${{ cost.amount }}</td>
+                    <td>{{ cost.date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.cost.view_direct_cost', id=cost.id) }}" class="btn btn-info btn-sm">View</a>
+                        <a href="{{ url_for('projects.cost.edit_direct_cost', id=cost.id) }}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{{ url_for('projects.cost.delete_direct_cost', id=cost.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this cost?');">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

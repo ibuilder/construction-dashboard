@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pre-Task List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Pre-Task Plans</h1>
+        <a href="{{ url_for('projects.safety.create_pretask', project_id=project.id) }}" class="btn btn-primary mb-3">Create New Pre-Task Plan</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pretask in pretask_list %}
+                <tr>
+                    <td>{{ pretask.id }}</td>
+                    <td>{{ pretask.title }}</td>
+                    <td>{{ pretask.description }}</td>
+                    <td>{{ pretask.date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.safety.view_pretask', id=pretask.id) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('projects.safety.edit_pretask', id=pretask.id) }}" class="btn btn-warning">Edit</a>
+                        <form action="{{ url_for('projects.safety.delete_pretask', id=pretask.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this pre-task plan?');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

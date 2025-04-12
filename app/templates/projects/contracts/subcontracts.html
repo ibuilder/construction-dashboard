@@ -1,0 +1,37 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Subcontracts</h1>
+    <a href="{{ url_for('projects.contracts.create_subcontract') }}" class="btn btn-primary">Create New Subcontract</a>
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Contractor Name</th>
+                <th>Contract Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subcontract in subcontracts %}
+            <tr>
+                <td>{{ subcontract.id }}</td>
+                <td>{{ subcontract.contractor_name }}</td>
+                <td>${{ subcontract.contract_amount }}</td>
+                <td>{{ subcontract.status }}</td>
+                <td>
+                    <a href="{{ url_for('projects.contracts.view_subcontract', id=subcontract.id) }}" class="btn btn-info">View</a>
+                    <a href="{{ url_for('projects.contracts.edit_subcontract', id=subcontract.id) }}" class="btn btn-warning">Edit</a>
+                    <form action="{{ url_for('projects.contracts.delete_subcontract', id=subcontract.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this subcontract?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

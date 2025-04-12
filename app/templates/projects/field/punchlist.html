@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punch List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Punch List</h1>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Assigned To</th>
+                    <th>Due Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in punchlist_items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.description }}</td>
+                    <td>{{ item.status }}</td>
+                    <td>{{ item.assigned_to }}</td>
+                    <td>{{ item.due_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.field.view_punchlist_item', id=item.id) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('projects.field.edit_punchlist_item', id=item.id) }}" class="btn btn-warning">Edit</a>
+                        <a href="{{ url_for('projects.field.delete_punchlist_item', id=item.id) }}" class="btn btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('projects.field.create_punchlist_item') }}" class="btn btn-success">Add New Item</a>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

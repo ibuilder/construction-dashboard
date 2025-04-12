@@ -1,0 +1,124 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Create Incident Report</h2>
+    <form method="POST" action="{{ url_for('projects.safety.create_incident', project_id=project.id) }}">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            <label for="title">Title</label>
+            {{ form.title(class="form-control", id="title") }}
+            {% for error in form.title.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            {{ form.description(class="form-control", id="description") }}
+            {% for error in form.description.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="incident_date">Incident Date</label>
+            {{ form.incident_date(class="form-control", id="incident_date") }}
+            {% for error in form.incident_date.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="incident_time">Incident Time</label>
+            {{ form.incident_time(class="form-control", id="incident_time") }}
+            {% for error in form.incident_time.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location</label>
+            {{ form.location(class="form-control", id="location") }}
+            {% for error in form.location.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="type">Type</label>
+            {{ form.type(class="form-control", id="type") }}
+            {% for error in form.type.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="severity">Severity</label>
+            {{ form.severity(class="form-control", id="severity") }}
+            {% for error in form.severity.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="reported_by_name">Reported By Name</label>
+            {{ form.reported_by_name(class="form-control", id="reported_by_name") }}
+            {% for error in form.reported_by_name.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="reported_by_title">Reported By Title</label>
+            {{ form.reported_by_title(class="form-control", id="reported_by_title") }}
+            {% for error in form.reported_by_title.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="witness_names">Witness Names</label>
+            {{ form.witness_names(class="form-control", id="witness_names") }}
+            {% for error in form.witness_names.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="root_cause">Root Cause</label>
+            {{ form.root_cause(class="form-control", id="root_cause") }}
+            {% for error in form.root_cause.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="corrective_actions">Corrective Actions</label>
+            {{ form.corrective_actions(class="form-control", id="corrective_actions") }}
+            {% for error in form.corrective_actions.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="is_osha_recordable">OSHA Recordable</label>
+            {{ form.is_osha_recordable(class="form-control", id="is_osha_recordable") }}
+            {% for error in form.is_osha_recordable.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="is_lost_time">Lost Time</label>
+            {{ form.is_lost_time(class="form-control", id="is_lost_time") }}
+            {% for error in form.is_lost_time.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+{% endblock %}

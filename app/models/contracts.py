@@ -1,199 +1,297 @@
 from app.extensions import db
 from datetime import datetime
-from sqlalchemy.sql import func
-from app.models.base import Comment, Attachment
+from sqlalchemy import func
 
-class PrimeContract(db.Model):
+class ContractStatus:
+    DRAFT = 'draft'
+    PENDING = 'pending'
+    ACTIVE = 'active'
+    COMPLETE = 'complete'
+    TERMINATED = 'terminated'
+    EXPIRED = 'expired'
+
+class ContractBase(db.Model):
+    __abstract__ = True
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.String(20), default=ContractStatus.DRAFT)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    
+    # Common relationships
+    creator = db.relationship('User', foreign_keys=[created_by])
+    
+    # Files and documents
+    document_path = db.Column(db.String(255))
+    signed_document_path = db.Column(db.String(255))
+
+class PrimeContract(ContractBase):
     __tablename__ = 'prime_contracts'
     
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    contract_number = db.Column(db.String(50))
-    contract_type = db.Column(db.String(20))  # GMP, Cost Plus, Lump Sum, CMAR
-    owner_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    contractor_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    original_amount = db.Column(db.Numeric(precision=14, scale=2))
-    current_amount = db.Column(db.Numeric(precision=14, scale=2))
-    execution_date = db.Column(db.Date)
-    commencement_date = db.Column(db.Date)
-    substantial_completion_date = db.Column(db.Date)
-    final_completion_date = db.Column(db.Date)
-    contract_term_days = db.Column(db.Integer)
-    status = db.Column(db.String(20), default='draft')
-    description = db.Column(db.Text)
-    special_provisions = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
-    # Relationships
-    project = db.relationship('Project', backref='prime_contracts')
-    owner = db.relationship('Company', foreign_keys=[owner_id])
-    contractor = db.relationship('Company', foreign_keys=[contractor_id])
-    creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='prime_contract',
-                              primaryjoin="and_(Comment.record_type=='prime_contract', "
-                                         "Comment.record_id==PrimeContract.id)")
-    attachments = db.relationship('Attachment', backref='prime_contract',
-                                 primaryjoin="and_(Attachment.record_type=='prime_contract', "
-                                            "Attachment.record_id==PrimeContract.id)")
-
-class Subcontract(db.Model):
-    __tablename__ = 'subcontracts'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    subcontract_number = db.Column(db.String(50))
-    prime_contract_id = db.Column(db.Integer, db.ForeignKey('prime_contracts.id'))
-    contractor_id = db.Column(db.Integer, db.ForeignKey('companies.id'))  # General contractor
-    subcontractor_id = db.Column(db.Integer, db.ForeignKey('companies.id'))  # Subcontractor
-    scope_of_work = db.Column(db.Text)
-    original_amount = db.Column(db.Numeric(precision=14, scale=2))
-    current_amount = db.Column(db.Numeric(precision=14, scale=2))
-    execution_date = db.Column(db.Date)
-    commencement_date = db.Column(db.Date)
-    completion_date = db.Column(db.Date)
-    csi_division = db.Column(db.String(20))
-    status = db.Column(db.String(20), default='draft')
-    retention_percent = db.Column(db.Numeric(precision=5, scale=2))
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
-    # Relationships
-    project = db.relationship('Project', backref='subcontracts')
-    prime_contract = db.relationship('PrimeContract', backref='subcontracts')
-    contractor = db.relationship('Company', foreign_keys=[contractor_id])
-    subcontractor = db.relationship('Company', foreign_keys=[subcontractor_id])
-    creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='subcontract',
-                              primaryjoin="and_(Comment.record_type=='subcontract', "
-                                         "Comment.record_id==Subcontract.id)")
-    attachments = db.relationship('Attachment', backref='subcontract',
-                                 primaryjoin="and_(Attachment.record_type=='subcontract', "
-                                            "Attachment.record_id==Subcontract.id)")
-
-class ServiceAgreement(db.Model):
-    __tablename__ = 'service_agreements'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    agreement_number = db.Column(db.String(50))
-    client_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    provider_id = db.Column(db.Integer, db.ForeignKey('companies.id'))
-    service_type = db.Column(db.String(50))  # Architecture, Engineering, Consulting, etc.
-    scope_of_services = db.Column(db.Text)
-    fee_type = db.Column(db.String(20))  # Fixed, Hourly, etc.
-    fee_amount = db.Column(db.Numeric(precision=14, scale=2))
-    execution_date = db.Column(db.Date)
+    contract_number = db.Column(db.String(50), unique=True)
+    contract_type = db.Column(db.String(50))  # lump sum, cost plus, etc.
+    contract_value = db.Column(db.Float)
     start_date = db.Column(db.Date)
     end_date = db.Column(db.Date)
-    status = db.Column(db.String(20), default='draft')
-    payment_terms = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    
+    # Contract parties
+    client_name = db.Column(db.String(100))
+    client_contact = db.Column(db.String(100))
+    client_email = db.Column(db.String(100))
+    client_phone = db.Column(db.String(20))
+    
+    # Financial terms
+    retainage_percent = db.Column(db.Float, default=0.0)
+    payment_terms = db.Column(db.String(100))
+    
+    # Contract execution
+    executed_date = db.Column(db.Date)
+    signed_by = db.Column(db.String(100))
+    
+    # Change order summary
+    approved_changes = db.Column(db.Float, default=0.0)
+    pending_changes = db.Column(db.Float, default=0.0)
+    revised_value = db.Column(db.Float)
     
     # Relationships
-    project = db.relationship('Project', backref='service_agreements')
-    client = db.relationship('Company', foreign_keys=[client_id])
-    provider = db.relationship('Company', foreign_keys=[provider_id])
-    creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='service_agreement',
-                              primaryjoin="and_(Comment.record_type=='service_agreement', "
-                                         "Comment.record_id==ServiceAgreement.id)")
-    attachments = db.relationship('Attachment', backref='service_agreement',
-                                 primaryjoin="and_(Attachment.record_type=='service_agreement', "
-                                            "Attachment.record_id==ServiceAgreement.id)")
+    project = db.relationship('Project', backref=db.backref('prime_contracts', lazy='dynamic'))
+    change_orders = db.relationship('ContractChangeOrder', backref='prime_contract', lazy='dynamic',
+                                  primaryjoin="and_(ContractChangeOrder.contract_id==PrimeContract.id, "
+                                             "ContractChangeOrder.contract_type=='prime')")
+    
+    def __repr__(self):
+        return f'<PrimeContract {self.id}: {self.title}>'
+    
+    def update_revised_value(self):
+        self.revised_value = self.contract_value + self.approved_changes
+
+class Subcontract(ContractBase):
+    __tablename__ = 'subcontracts'
+    
+    subcontract_number = db.Column(db.String(50), unique=True)
+    subcontract_type = db.Column(db.String(50))  # lump sum, unit price, etc.
+    subcontract_value = db.Column(db.Float)
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    
+    # Subcontractor details
+    company_name = db.Column(db.String(100))
+    contact_name = db.Column(db.String(100))
+    contact_email = db.Column(db.String(100))
+    contact_phone = db.Column(db.String(20))
+    
+    # Scope
+    scope_of_work = db.Column(db.Text)
+    
+    # Financial terms
+    retainage_percent = db.Column(db.Float, default=0.0)
+    payment_terms = db.Column(db.String(100))
+    
+    # Contract execution
+    executed_date = db.Column(db.Date)
+    signed_by = db.Column(db.String(100))
+    
+    # Change order summary
+    approved_changes = db.Column(db.Float, default=0.0)
+    pending_changes = db.Column(db.Float, default=0.0)
+    revised_value = db.Column(db.Float)
+    
+    # Insurance and compliance
+    insurance_expiration = db.Column(db.Date)
+    bonded = db.Column(db.Boolean, default=False)
+    bond_company = db.Column(db.String(100))
+    
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('subcontracts', lazy='dynamic'))
+    change_orders = db.relationship('ContractChangeOrder', backref='subcontract', lazy='dynamic',
+                                  primaryjoin="and_(ContractChangeOrder.contract_id==Subcontract.id, "
+                                             "ContractChangeOrder.contract_type=='subcontract')")
+    
+    def __repr__(self):
+        return f'<Subcontract {self.id}: {self.title}>'
+    
+    def update_revised_value(self):
+        self.revised_value = self.subcontract_value + self.approved_changes
+
+class ProfessionalServiceAgreement(ContractBase):
+    __tablename__ = 'professional_service_agreements'
+    
+    agreement_number = db.Column(db.String(50), unique=True)
+    agreement_type = db.Column(db.String(50))  # hourly, fixed fee, etc.
+    agreement_value = db.Column(db.Float)
+    start_date = db.Column(db.Date)
+    end_date = db.Column(db.Date)
+    
+    # Service provider details
+    company_name = db.Column(db.String(100))
+    contact_name = db.Column(db.String(100))
+    contact_email = db.Column(db.String(100))
+    contact_phone = db.Column(db.String(20))
+    
+    # Scope
+    scope_of_services = db.Column(db.Text)
+    
+    # Financial terms
+    rate_schedule = db.Column(db.Text)
+    payment_terms = db.Column(db.String(100))
+    
+    # Contract execution
+    executed_date = db.Column(db.Date)
+    signed_by = db.Column(db.String(100))
+    
+    # Change order summary
+    approved_changes = db.Column(db.Float, default=0.0)
+    pending_changes = db.Column(db.Float, default=0.0)
+    revised_value = db.Column(db.Float)
+    
+    # Insurance
+    insurance_requirements = db.Column(db.Text)
+    insurance_expiration = db.Column(db.Date)
+    
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('professional_service_agreements', lazy='dynamic'))
+    change_orders = db.relationship('ContractChangeOrder', backref='agreement', lazy='dynamic',
+                                  primaryjoin="and_(ContractChangeOrder.contract_id==ProfessionalServiceAgreement.id, "
+                                             "ContractChangeOrder.contract_type=='agreement')")
+    
+    def __repr__(self):
+        return f'<ProfessionalServiceAgreement {self.id}: {self.title}>'
+    
+    def update_revised_value(self):
+        self.revised_value = self.agreement_value + self.approved_changes
 
 class LienWaiver(db.Model):
     __tablename__ = 'lien_waivers'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    contract_id = db.Column(db.Integer)  # Can be prime_contract_id or subcontract_id
-    contract_type = db.Column(db.String(20))  # 'prime' or 'sub'
-    waiver_type = db.Column(db.String(20))  # partial, final, conditional, unconditional
-    amount = db.Column(db.Numeric(precision=14, scale=2))
-    through_date = db.Column(db.Date)
-    signed_date = db.Column(db.Date)
-    signed_by = db.Column(db.String(100))
-    status = db.Column(db.String(20), default='pending')
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    contractor_name = db.Column(db.String(100), nullable=False)
+    waiver_type = db.Column(db.String(50))  # partial, final, conditional, unconditional
+    waiver_date = db.Column(db.Date, nullable=False)
+    amount = db.Column(db.Float)
+    through_date = db.Column(db.Date)  # For partial waivers, work completed through date
+    document_path = db.Column(db.String(255))
+    notes = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
-    # Relationships
-    project = db.relationship('Project', backref='lien_waivers')
-    company = db.relationship('Company', backref='lien_waivers')
-    creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='lien_waiver',
-                              primaryjoin="and_(Comment.record_type=='lien_waiver', "
-                                         "Comment.record_id==LienWaiver.id)")
-    attachments = db.relationship('Attachment', backref='lien_waiver',
-                                 primaryjoin="and_(Attachment.record_type=='lien_waiver', "
-                                            "Attachment.record_id==LienWaiver.id)")
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
-class InsuranceCertificate(db.Model):
-    __tablename__ = 'insurance_certificates'
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('lien_waivers', lazy='dynamic'))
+    creator = db.relationship('User', foreign_keys=[created_by])
+    
+    def __repr__(self):
+        return f'<LienWaiver {self.id}: {self.contractor_name} - {self.waiver_type}>'
+
+class CertificateOfInsurance(db.Model):
+    __tablename__ = 'certificates_of_insurance'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    policy_number = db.Column(db.String(50))
-    insurance_type = db.Column(db.String(50))  # General Liability, Workers Comp, etc.
-    carrier = db.Column(db.String(100))
+    provider_name = db.Column(db.String(100), nullable=False)
+    insured_party = db.Column(db.String(100), nullable=False)
+    policy_number = db.Column(db.String(50), nullable=False)
+    policy_type = db.Column(db.String(50))  # general liability, workers comp, etc.
     effective_date = db.Column(db.Date)
-    expiration_date = db.Column(db.Date)
-    coverage_amount = db.Column(db.Numeric(precision=14, scale=2))
-    additional_insured = db.Column(db.Text)
-    status = db.Column(db.String(20), default='active')
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    expiration_date = db.Column(db.Date, nullable=False)
+    coverage_amount = db.Column(db.Float)
+    additional_insured = db.Column(db.Boolean, default=False)
+    document_path = db.Column(db.String(255))
+    notes = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
     # Relationships
-    project = db.relationship('Project', backref='insurance_certificates')
-    company = db.relationship('Company', backref='insurance_certificates')
+    project = db.relationship('Project', backref=db.backref('certificates_of_insurance', lazy='dynamic'))
     creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='insurance_certificate',
-                              primaryjoin="and_(Comment.record_type=='insurance_certificate', "
-                                         "Comment.record_id==InsuranceCertificate.id)")
-    attachments = db.relationship('Attachment', backref='insurance_certificate',
-                                 primaryjoin="and_(Attachment.record_type=='insurance_certificate', "
-                                            "Attachment.record_id==InsuranceCertificate.id)")
+    
+    def __repr__(self):
+        return f'<CertificateOfInsurance {self.id}: {self.insured_party} - {self.policy_type}>'
 
 class LetterOfIntent(db.Model):
     __tablename__ = 'letters_of_intent'
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    from_company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    to_company_id = db.Column(db.Integer, db.ForeignKey('companies.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
-    reference_number = db.Column(db.String(50))
-    scope_of_work = db.Column(db.Text)
-    estimated_value = db.Column(db.Numeric(precision=14, scale=2))
-    issued_date = db.Column(db.Date)
+    recipient_name = db.Column(db.String(100), nullable=False)
+    recipient_company = db.Column(db.String(100))
+    work_description = db.Column(db.Text, nullable=False)
+    estimated_value = db.Column(db.Float)
+    issue_date = db.Column(db.Date, nullable=False)
     expiration_date = db.Column(db.Date)
-    status = db.Column(db.String(20), default='issued')
-    special_conditions = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=func.now())
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    executed = db.Column(db.Boolean, default=False)
+    executed_date = db.Column(db.Date)
+    converted_to_contract = db.Column(db.Boolean, default=False)
+    contract_id = db.Column(db.Integer)  # ID of the resulting contract
+    document_path = db.Column(db.String(255))
+    notes = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
     # Relationships
-    project = db.relationship('Project', backref='letters_of_intent')
-    from_company = db.relationship('Company', foreign_keys=[from_company_id])
-    to_company = db.relationship('Company', foreign_keys=[to_company_id])
+    project = db.relationship('Project', backref=db.backref('letters_of_intent', lazy='dynamic'))
     creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='letter_of_intent',
-                              primaryjoin="and_(Comment.record_type=='letter_of_intent', "
-                                         "Comment.record_id==LetterOfIntent.id)")
-    attachments = db.relationship('Attachment', backref='letter_of_intent',
-                                 primaryjoin="and_(Attachment.record_type=='letter_of_intent', "
-                                            "Attachment.record_id==LetterOfIntent.id)")
+    
+    def __repr__(self):
+        return f'<LetterOfIntent {self.id}: {self.recipient_name}>'
+
+class ContractChangeOrder(db.Model):
+    __tablename__ = 'contract_change_orders'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    contract_id = db.Column(db.Integer, nullable=False)
+    contract_type = db.Column(db.String(20), nullable=False)  # 'prime', 'subcontract', 'agreement'
+    change_order_number = db.Column(db.String(50))
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    amount = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
+    requested_date = db.Column(db.Date)
+    approved_date = db.Column(db.Date)
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    time_extension_days = db.Column(db.Integer, default=0)
+    reason_code = db.Column(db.String(50))  # code for change reason
+    document_path = db.Column(db.String(255))
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('change_orders', lazy='dynamic'))
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_change_orders')
+    approver = db.relationship('User', foreign_keys=[approved_by], backref='approved_change_orders')
+    
+    def __repr__(self):
+        return f'<ChangeOrder {self.id}: {self.title} (${self.amount})>'
+
+class ContractDocument(db.Model):
+    __tablename__ = 'contract_documents'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    contract_id = db.Column(db.Integer, nullable=False)
+    contract_type = db.Column(db.String(20), nullable=False)  # 'prime', 'subcontract', 'agreement', etc.
+    document_type = db.Column(db.String(50), nullable=False)  # 'contract', 'amendment', 'exhibit', etc.
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    file_name = db.Column(db.String(255))
+    file_path = db.Column(db.String(255))
+    file_size = db.Column(db.Integer)  # in bytes
+    file_type = db.Column(db.String(50))  # mime type
+    version = db.Column(db.String(20))
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    uploaded_at = db.Column(db.DateTime, default=func.now())
+
+    # Relationships
+    project = db.relationship('Project', backref=db.backref('contract_documents', lazy='dynamic'))
+    uploader = db.relationship('User', backref='uploaded_contract_documents')
+    
+    def __repr__(self):
+        return f'<ContractDocument {self.id}: {self.title}>'

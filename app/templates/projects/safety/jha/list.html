@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Hazard Analysis List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Job Hazard Analysis List</h1>
+        <a href="{{ url_for('projects.safety.jha.create') }}" class="btn btn-primary mb-3">Create New JHA</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Date Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for jha in jhas %}
+                <tr>
+                    <td>{{ jha.id }}</td>
+                    <td>{{ jha.title }}</td>
+                    <td>{{ jha.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.safety.jha.view', id=jha.id) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('projects.safety.jha.edit', id=jha.id) }}" class="btn btn-warning">Edit</a>
+                        <form action="{{ url_for('projects.safety.jha.delete', id=jha.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this JHA?');">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

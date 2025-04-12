@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Safety Observation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Safety Observation Details</h1>
+        <h2>{{ observation.title }}</h2>
+        <p><strong>Description:</strong> {{ observation.description }}</p>
+        <p><strong>Observation Date:</strong> {{ observation.observation_date.strftime('%Y-%m-%d') }}</p>
+        <p><strong>Location:</strong> {{ observation.location }}</p>
+        <p><strong>Category:</strong> {{ observation.category }}</p>
+        <p><strong>Severity:</strong> {{ observation.severity }}</p>
+        <p><strong>Status:</strong> {{ observation.status }}</p>
+        <p><strong>Observed By:</strong> {{ observation.observed_by }}</p>
+        <p><strong>Created By:</strong> {{ observation.created_by }}</p>
+
+        <h3>Comments</h3>
+        <ul>
+            {% for comment in comments %}
+                <li>{{ comment.content }} - <em>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</em></li>
+            {% endfor %}
+        </ul>
+
+        <h3>Attachments</h3>
+        <ul>
+            {% for attachment in attachments %}
+                <li><a href="{{ url_for('static', filename='uploads/' + attachment.filename) }}">{{ attachment.filename }}</a></li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('projects.safety.observations', project_id=observation.project_id) }}" class="btn btn-primary">Back to Observations</a>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+{% extends 'layout.html' %}
+
+{% block title %}Contracts Dashboard - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Contracts Dashboard</h1>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="addContractDropdown" data-toggle="dropdown">
+                <i class="bi bi-plus-circle"></i> Add New
+            </button>
+            <div class="dropdown-menu" aria-labelledby="addContractDropdown">
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_contract', project_id=project.id) }}">
+                    Prime Contract
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_subcontract', project_id=project.id) }}">
+                    Subcontract
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_agreement', project_id=project.id) }}">
+                    Professional Service Agreement
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_lien_waiver', project_id=project.id) }}">
+                    Lien Waiver
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_certificate_of_insurance', project_id=project.id) }}">
+                    Insurance Certificate
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_letter_of_intent', project_id=project.id) }}">
+                    Letter of Intent
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row - Contract Stats -->
+    <div class="row">
+        <!-- Prime Contracts -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Prime Contracts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ prime_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.contracts.contracts', project_id=project.id) }}" class="text-primary">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subcontracts -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Subcontracts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ subcontract_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.contracts.subcontracts', project_id=project.id) }}" class="text-success">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agreements -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Professional Service Agreements</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ agreement_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.contracts.agreements', project_id=project.id) }}" class="text-info">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Letters of Intent -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Letters of Intent</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ loi_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            {% extends 'layout.html' %}
+
+{% block title %}Contracts Dashboard - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Contracts Dashboard</h1>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="addContractDropdown" data-toggle="dropdown">
+                <i class="bi bi-plus-circle"></i> Add New
+            </button>
+            <div class="dropdown-menu" aria-labelledby="addContractDropdown">
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_contract', project_id=project.id) }}">
+                    Prime Contract
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_subcontract', project_id=project.id) }}">
+                    Subcontract
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_agreement', project_id=project.id) }}">
+                    Professional Service Agreement
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_lien_waiver', project_id=project.id) }}">
+                    Lien Waiver
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_certificate_of_insurance', project_id=project.id) }}">
+                    Insurance Certificate
+                </a>
+                <a class="dropdown-item" href="{{ url_for('projects.contracts.create_letter_of_intent', project_id=project.id) }}">
+                    Letter of Intent
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row - Contract Stats -->
+    <div class="row">
+        <!-- Prime Contracts -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Prime Contracts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ prime_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.contracts.contracts', project_id=project.id) }}" class="text-primary">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subcontracts -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Subcontracts</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ subcontract_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.contracts.subcontracts', project_id=project.id) }}" class="text-success">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agreements -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Professional Service Agreements</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ agreement_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.contracts.agreements', project_id=project.id) }}" class="text-info">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Letters of Intent -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Letters of Intent</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ loi_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            

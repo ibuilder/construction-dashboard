@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transmittals</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Transmittals</h1>
+        <div class="mb-3">
+            <a href="{{ url_for('projects.engineering.create_transmittal', project_id=project.id) }}" class="btn btn-primary">Create New Transmittal</a>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Date</th>
+                    <th>Recipient</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transmittal in transmittals %}
+                <tr>
+                    <td>{{ transmittal.id }}</td>
+                    <td>{{ transmittal.title }}</td>
+                    <td>{{ transmittal.date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ transmittal.recipient }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.engineering.view_transmittal', id=transmittal.id) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('projects.engineering.edit_transmittal', id=transmittal.id) }}" class="btn btn-warning">Edit</a>
+                        <a href="{{ url_for('projects.engineering.delete_transmittal', id=transmittal.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this transmittal?');">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

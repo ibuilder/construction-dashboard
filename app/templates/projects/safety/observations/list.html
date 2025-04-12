@@ -1,0 +1,176 @@
+{% extends 'layout.html' %}
+
+{% block title %}Safety Observations - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Title -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Safety Observations</h1>
+        <a href="{{ url_for('projects.safety.create_observation', project_id=project.id) }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Observation
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" id="filterForm" class="row g-3">
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if request.args.get('status') == 'all' %}selected{% endif %}>All Statuses</option>
+                        <option value="open" {% if request.args.get('status') == 'open' %}selected{% endif %}>Open</option>
+                        <option value="in_progress" {% if request.args.get('status') == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="closed" {% if request.args.get('status') == 'closed' %}selected{% endif %}>Closed</option>
+                        <option value="verified" {% if request.args.get('status') == 'verified' %}selected{% endif %}>Verified</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="category" class="form-label">Category</label>
+                    <select name="category" id="category" class="form-select">
+                        <option value="all" {% if request.args.get('category') == 'all' %}selected{% endif %}>All Categories</option>
+                        <option value="unsafe_act" {% if request.args.get('category') == 'unsafe_act' %}selected{% endif %}>Unsafe Act</option>
+                        <option value="unsafe_condition" {% if request.args.get('category') == 'unsafe_condition' %}selected{% endif %}>Unsafe Condition</option>
+                        <option value="environmental" {% if request.args.get('category') == 'environmental' %}selected{% endif %}>Environmental</option>
+                        <option value="near_miss" {% if request.args.get('category') == 'near_miss' %}selected{% endif %}>Near Miss</option>
+                        <option value="safety_violation" {% if request.args.get('category') == 'safety_violation' %}selected{% endif %}>Safety Violation</option>
+                        <option value="positive_observation" {% if request.args.get('category') == 'positive_observation' %}selected{% endif %}>Positive Observation</option>
+                        <option value="other" {% if request.args.get('category') == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="severity" class="form-label">Severity</label>
+                    <select name="severity" id="severity" class="form-select">
+                        <option value="all" {% if request.args.get('severity') == 'all' %}selected{% endif %}>All Severity Levels</option>
+                        <option value="low" {% if request.args.get('severity') == 'low' %}selected{% endif %}>Low</option>
+                        <option value="medium" {% if request.args.get('severity') == 'medium' %}selected{% endif %}>Medium</option>
+                        <option value="high" {% if request.args.get('severity') == 'high' %}selected{% endif %}>High</option>
+                        <option value="critical" {% if request.args.get('severity') == 'critical' %}selected{% endif %}>Critical</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-filter"></i> Apply Filters
+                        </button>
+                        <a href="{{ url_for('projects.safety.observations', project_id=project.id) }}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Observations Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Safety Observations</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="observationsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Title</th>
+                            <th>Location</th>
+                            <th>Category</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Observed By</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for observation in observations %}
+                        <tr>
+                            <td>{{ observation.observation_date.strftime('%m/%d/%Y') }}</td>
+                            <td>{{ observation.title }}</td>
+                            <td>{{ observation.location }}</td>
+                            <td>
+                                {% if observation.category == 'unsafe_act' %}
+                                <span class="badge bg-danger">Unsafe Act</span>
+                                {% elif observation.category == 'unsafe_condition' %}
+                                <span class="badge bg-warning text-dark">Unsafe Condition</span>
+                                {% elif observation.category == 'environmental' %}
+                                <span class="badge bg-info">Environmental</span>
+                                {% elif observation.category == 'near_miss' %}
+                                <span class="badge bg-warning text-dark">Near Miss</span>
+                                {% elif observation.category == 'safety_violation' %}
+                                <span class="badge bg-danger">Safety Violation</span>
+                                {% elif observation.category == 'positive_observation' %}
+                                <span class="badge bg-success">Positive Observation</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Other</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if observation.severity == 'low' %}
+                                <span class="badge bg-success">Low</span>
+                                {% elif observation.severity == 'medium' %}
+                                <span class="badge bg-warning text-dark">Medium</span>
+                                {% elif observation.severity == 'high' %}
+                                <span class="badge bg-danger">High</span>
+                                {% elif observation.severity == 'critical' %}
+                                <span class="badge bg-dark">Critical</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if observation.status == 'open' %}
+                                <span class="badge bg-danger">Open</span>
+                                {% elif observation.status == 'in_progress' %}
+                                <span class="badge bg-warning text-dark">In Progress</span>
+                                {% elif observation.status == 'closed' %}
+                                <span class="badge bg-success">Closed</span>
+                                {% elif observation.status == 'verified' %}
+                                <span class="badge bg-primary">Verified</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ observation.observer.full_name if observation.observer else 'Unknown' }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('projects.safety.view_observation', project_id=project.id, observation_id=observation.id) }}" 
+                                       class="btn btn-sm btn-info" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('projects.safety.edit_observation', project_id=project.id, observation_id=observation.id) }}" 
+                                       class="btn btn-sm btn-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if not observations %}
+            <div class="text-center p-4">
+                <p class="text-muted">No safety observations found. Create a new observation to get started.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize DataTable
+        $('#observationsTable').DataTable({
+            "order": [[0, 'desc']], // Sort by date descending
+            "pageLength": 25,
+            "language": {
+                "searchPlaceholder": "Search observations..."
+            }
+        });
+    });
+</script>
+{% endblock %}

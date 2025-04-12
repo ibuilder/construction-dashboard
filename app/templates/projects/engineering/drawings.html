@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Project Drawings</h1>
+        <p class="lead">Here you can view and manage project drawings.</p>
+
+        <div class="mb-3">
+            <a href="{{ url_for('projects.engineering.upload_drawing', project_id=project.id) }}" class="btn btn-primary">Upload New Drawing</a>
+        </div>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Date Uploaded</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for drawing in drawings %}
+                <tr>
+                    <td>{{ drawing.title }}</td>
+                    <td>{{ drawing.description }}</td>
+                    <td>{{ drawing.date_uploaded.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.engineering.view_drawing', drawing_id=drawing.id) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('projects.engineering.delete_drawing', drawing_id=drawing.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this drawing?');">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

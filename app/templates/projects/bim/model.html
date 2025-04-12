@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIM Model Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">BIM Model Viewer</h1>
+        <div class="row">
+            <div class="col-md-12">
+                <h2>3D Model</h2>
+                <div id="model-viewer" style="width: 100%; height: 600px;">
+                    <!-- Placeholder for the 3D model -->
+                    <p>Your 3D model will be displayed here.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <h2>Model Information</h2>
+                <p>Details about the model can be displayed here.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script>
+        // JavaScript to handle the 3D model rendering can be added here
+    </script>
+</body>
+</html>

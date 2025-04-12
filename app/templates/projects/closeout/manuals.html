@@ -1,0 +1,141 @@
+{% extends 'layout.html' %}
+
+{% block title %}O&M Manuals - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">O&M Manuals</h1>
+        <a href="{{ url_for('projects.closeout.create_manual', project_id=project.id) }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add Manual
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filters</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <input type="hidden" name="project_id" value="{{ project.id }}">
+                
+                <div class="col-md-4">
+                    <label for="category" class="form-label">Equipment Category</label>
+                    <select name="category" id="category" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search or '' }}" placeholder="Search by title...">
+                </div>
+                
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-filter"></i> Filter
+                    </button>
+                    <a href="{{ url_for('projects.closeout.manuals', project_id=project.id) }}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manuals Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">O&M Manuals</h6>
+        </div>
+        <div class="card-body">
+            {% if manuals %}
+            <div class="table-responsive">
+                <table class="table table-bordered" id="manualsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Equipment Category</th>
+                            <th>Manufacturer</th>
+                            <th>Location</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for manual in manuals %}
+                        <tr>
+                            <td>{{ manual.title }}</td>
+                            <td>{{ manual.equipment_category or 'N/A' }}</td>
+                            <td>{{ manual.manufacturer or 'N/A' }}</td>
+                            <td>{{ manual.location or 'N/A' }}</td>
+                            <td>{{ manual.created_at.strftime('%m/%d/%Y') }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('projects.closeout.view_manual', project_id=project.id, manual_id=manual.id) }}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('projects.closeout.edit_manual', project_id=project.id, manual_id=manual.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ manual.id }}">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Delete Modal -->
+                                <div class="modal fade" id="deleteModal{{ manual.id }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                Are you sure you want to delete the manual "{{ manual.title }}"? This action cannot be undone.
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                <form action="{{ url_for('projects.closeout.delete_manual', project_id=project.id, manual_id=manual.id) }}" method="post">
+                                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center p-4">
+                <p class="text-muted">No O&M manuals found. Add a manual to get started.</p>
+                <a href="{{ url_for('projects.closeout.create_manual', project_id=project.id) }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Add Manual
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if manuals %}
+<script>
+    $(document).ready(function() {
+        $('#manualsTable').DataTable({
+            "order": [[4, 'desc']], // Sort by date added (descending)
+            "pageLength": 25
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attic Stock</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-5">Attic Stock</h1>
+        <p class="lead">Manage the attic stock for the project.</p>
+
+        <div class="mb-4">
+            <a href="{{ url_for('projects.closeout.create_attic_stock') }}" class="btn btn-primary">Add New Attic Stock Item</a>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in attic_stock_items %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.location }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.closeout.view_attic_stock_item', id=item.id) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('projects.closeout.edit_attic_stock_item', id=item.id) }}" class="btn btn-warning">Edit</a>
+                        <a href="{{ url_for('projects.closeout.delete_attic_stock_item', id=item.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this item?');">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

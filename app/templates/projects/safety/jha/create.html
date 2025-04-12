@@ -1,0 +1,55 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2>Create Job Hazard Analysis (JHA)</h2>
+    <form method="POST" action="{{ url_for('projects.safety.create_jha', project_id=project.id) }}">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            <label for="title">Title</label>
+            {{ form.title(class="form-control", id="title") }}
+            {% for error in form.title.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            {{ form.description(class="form-control", id="description") }}
+            {% for error in form.description.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="location">Location</label>
+            {{ form.location(class="form-control", id="location") }}
+            {% for error in form.location.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="hazard">Hazard Identified</label>
+            {{ form.hazard(class="form-control", id="hazard") }}
+            {% for error in form.hazard.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="controls">Controls Implemented</label>
+            {{ form.controls(class="form-control", id="controls") }}
+            {% for error in form.controls.errors %}
+                <div class="alert alert-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="submit"></label>
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+</div>
+{% endblock %}

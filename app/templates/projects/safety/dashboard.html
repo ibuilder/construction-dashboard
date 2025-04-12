@@ -1,0 +1,416 @@
+{% extends 'layout.html' %}
+
+{% block title %}Safety Dashboard - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Heading -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Safety Dashboard</h1>
+        <div>
+            <a href="{{ url_for('projects.safety.create_observation', project_id=project.id) }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-circle"></i> New Observation
+            </a>
+            <a href="{{ url_for('projects.safety.create_incident', project_id=project.id) }}" class="btn btn-danger btn-sm">
+                <i class="bi bi-exclamation-triangle"></i> Report Incident
+            </a>
+        </div>
+    </div>
+
+    <!-- Content Row - Safety Metrics -->
+    <div class="row">
+        <!-- TRIR Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                TRIR (Project to Date)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.2f"|format(trir) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-data fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LTIR Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                LTIR (Project to Date)</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ "%.2f"|format(ltir) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clipboard-data fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Observations Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Safety Observations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ observations_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-eye fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.safety.observations', project_id=project.id) }}" class="text-success">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incidents Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Incidents</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ incidents_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.safety.incidents', project_id=project.id) }}" class="text-warning">View All</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row - Safety Activities -->
+    <div class="row">
+        <!-- JHA Card -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Job Hazard Analyses</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ jha_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.safety.job_hazard_analyses', project_id=project.id) }}" class="text-info">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pre-Task Plans Card -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Pre-Task Plans</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pretask_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-list-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.safety.pretask_plans', project_id=project.id) }}" class="text-info">View All</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Orientations Card -->
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Safety Orientations</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ orientation_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.safety.orientations', project_id=project.id) }}" class="text-info">View All</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Row - Charts -->
+    <div class="row">
+        <!-- Observations by Type Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Observations by Type</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-pie">
+                        <canvas id="observationsPieChart"></canvas>
+                    </div>
+                    {% if not type_labels %}
+                    <div class="text-center mt-3">
+                        <p class="text-muted">No observation data available.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Safety Trends Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Monthly Safety Trends</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-bar">
+                        <canvas id="safetyTrendsChart"></canvas>
+                    </div>
+                    {% if not months %}
+                    <div class="text-center mt-3">
+                        <p class="text-muted">No monthly data available.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Incidents -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Recent Incidents</h6>
+            <a href="{{ url_for('projects.safety.incidents', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Incident #</th>
+                            <th>Title</th>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for incident in recent_incidents %}
+                        <tr>
+                            <td>{{ incident.incident_date.strftime('%m/%d/%Y') }}</td>
+                            <td>{{ incident.incident_number }}</td>
+                            <td>{{ incident.title }}</td>
+                            <td>
+                                {% if incident.incident_type == 'near_miss' %}
+                                <span class="badge bg-warning text-dark">Near Miss</span>
+                                {% elif incident.incident_type == 'first_aid' %}
+                                <span class="badge bg-info">First Aid</span>
+                                {% elif incident.incident_type == 'medical_treatment' %}
+                                <span class="badge bg-warning text-dark">Medical Treatment</span>
+                                {% elif incident.incident_type == 'lost_time' %}
+                                <span class="badge bg-danger">Lost Time</span>
+                                {% elif incident.incident_type == 'fatality' %}
+                                <span class="badge bg-dark">Fatality</span>
+                                {% elif incident.incident_type == 'property_damage' %}
+                                <span class="badge bg-secondary">Property Damage</span>
+                                {% elif incident.incident_type == 'environmental' %}
+                                <span class="badge bg-success">Environmental</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Other</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if incident.severity == 'low' %}
+                                <span class="badge bg-success">Low</span>
+                                {% elif incident.severity == 'medium' %}
+                                <span class="badge bg-warning text-dark">Medium</span>
+                                {% elif incident.severity == 'high' %}
+                                <span class="badge bg-danger">High</span>
+                                {% elif incident.severity == 'critical' %}
+                                <span class="badge bg-dark">Critical</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if incident.status == 'draft' %}
+                                <span class="badge bg-secondary">Draft</span>
+                                {% elif incident.status == 'open' %}
+                                <span class="badge bg-danger">Open</span>
+                                {% elif incident.status == 'investigating' %}
+                                <span class="badge bg-warning text-dark">Investigating</span>
+                                {% elif incident.status == 'closed' %}
+                                <span class="badge bg-success">Closed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('projects.safety.view_incident', project_id=project.id, incident_id=incident.id) }}" 
+                                   class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if not recent_incidents %}
+            <div class="text-center p-4">
+                <p class="text-muted">No incidents reported.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Observations Pie Chart
+        {% if type_labels %}
+        var observationsCtx = document.getElementById('observationsPieChart').getContext('2d');
+        var observationsPieChart = new Chart(observationsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ type_labels|tojson }},
+                datasets: [{
+                    data: {{ type_data|tojson }},
+                    backgroundColor: [
+                        '#e74a3b', // Red - Unsafe Act
+                        '#f6c23e', // Yellow - Unsafe Condition
+                        '#36b9cc', // Cyan - Environmental
+                        '#fd7e14', // Orange - Near Miss
+                        '#e74a3b', // Red - Safety Violation
+                        '#1cc88a', // Green - Positive Observation
+                        '#858796'  // Gray - Other
+                    ],
+                    hoverBackgroundColor: [
+                        '#be3c30',
+                        '#daa520',
+                        '#2c9fad',
+                        '#d26a12',
+                        '#be3c30',
+                        '#17a673',
+                        '#717180'
+                    ],
+                    hoverBorderColor: "rgba(234, 236, 244, 1)",
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    caretPadding: 10,
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
+                cutoutPercentage: 70,
+            },
+        });
+        {% endif %}
+
+        // Monthly Safety Trends Chart
+        {% if months %}
+        var trendsCtx = document.getElementById('safetyTrendsChart').getContext('2d');
+        var safetyTrendsChart = new Chart(trendsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ months|tojson }},
+                datasets: [{
+                    label: "Incidents",
+                    backgroundColor: "#e74a3b",
+                    hoverBackgroundColor: "#be3c30",
+                    borderColor: "#e74a3b",
+                    data: {{ incidents_data|tojson }},
+                }],
+            },
+            options: {
+                maintainAspectRatio: false,
+                tooltips: {
+                    backgroundColor: "rgb(255,255,255)",
+                    bodyFontColor: "#858796",
+                    borderColor: '#dddfeb',
+                    borderWidth: 1,
+                    xPadding: 15,
+                    yPadding: 15,
+                    displayColors: false,
+                    caretPadding: 10,
+                },
+                legend: {
+                    display: false
+                },
+                scales: {
+                    xAxes: [{
+                        time: {
+                            unit: 'month'
+                        },
+                        gridLines: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            maxTicksLimit: 6
+                        },
+                        maxBarThickness: 25,
+                    }],
+                    yAxes: [{
+                        ticks: {
+                            min: 0,
+                            max: Math.max(...{{ incidents_data|tojson }}) + 1,
+                            maxTicksLimit: 5,
+                            padding: 10,
+                        },
+                        gridLines: {
+                            color: "rgb(234, 236, 244)",
+                            zeroLineColor: "rgb(234, 236, 244)",
+                            drawBorder: false,
+                            borderDash: [2],
+                            zeroLineBorderDash: [2]
+                        }
+                    }],
+                },
+            },
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

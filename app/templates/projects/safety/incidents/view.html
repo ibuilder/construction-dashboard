@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Report - {{ observation.title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>{{ observation.title }}</h1>
+        <p><strong>Description:</strong> {{ observation.description }}</p>
+        <p><strong>Incident Date:</strong> {{ observation.incident_date.strftime('%Y-%m-%d') }}</p>
+        <p><strong>Incident Time:</strong> {{ observation.incident_time }}</p>
+        <p><strong>Location:</strong> {{ observation.location }}</p>
+        <p><strong>Type:</strong> {{ observation.type }}</p>
+        <p><strong>Severity:</strong> {{ observation.severity }}</p>
+        <p><strong>Reported By:</strong> {{ observation.reported_by_name }} ({{ observation.reported_by_title }})</p>
+        <p><strong>Witnesses:</strong> {{ observation.witness_names }}</p>
+        <p><strong>Root Cause:</strong> {{ observation.root_cause }}</p>
+        <p><strong>Corrective Actions:</strong> {{ observation.corrective_actions }}</p>
+        <p><strong>OSHA Recordable:</strong> {{ 'Yes' if observation.is_osha_recordable else 'No' }}</p>
+        <p><strong>Lost Time:</strong> {{ 'Yes' if observation.is_lost_time else 'No' }}</p>
+
+        <h3>Comments</h3>
+        <ul>
+            {% for comment in comments %}
+                <li>{{ comment.content }} - <em>{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</em></li>
+            {% endfor %}
+        </ul>
+
+        <h3>Attachments</h3>
+        <ul>
+            {% for attachment in attachments %}
+                <li><a href="{{ url_for('static', filename='uploads/' + attachment.filename) }}">{{ attachment.filename }}</a></li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('projects.safety.incidents', project_id=observation.project_id) }}" class="btn btn-primary">Back to Incidents</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

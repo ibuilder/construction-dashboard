@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Contract</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Prime Contract</h1>
+        <p>Details of the prime contract will be displayed here.</p>
+
+        <h2>Contract Information</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Contract Number</td>
+                    <td>{{ contract.contract_number }}</td>
+                </tr>
+                <tr>
+                    <td>Contractor</td>
+                    <td>{{ contract.contractor }}</td>
+                </tr>
+                <tr>
+                    <td>Start Date</td>
+                    <td>{{ contract.start_date }}</td>
+                </tr>
+                <tr>
+                    <td>End Date</td>
+                    <td>{{ contract.end_date }}</td>
+                </tr>
+                <tr>
+                    <td>Total Amount</td>
+                    <td>${{ contract.total_amount }}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td>{{ contract.status }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Contract Documents</h2>
+        <ul>
+            {% for document in contract.documents %}
+                <li><a href="{{ url_for('static', filename='documents/' + document.filename) }}">{{ document.title }}</a></li>
+            {% endfor %}
+        </ul>
+
+        <a href="{{ url_for('projects.contracts.list') }}" class="btn btn-primary">Back to Contracts</a>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

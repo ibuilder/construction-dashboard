@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <title>Pull Planning</title>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Pull Planning</h1>
+        <p>Welcome to the Pull Planning dashboard. Here you can manage and visualize the pull planning process for your construction project.</p>
+
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Current Pull Plan</h2>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Assigned To</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Example row, replace with dynamic content -->
+                        <tr>
+                            <td>Task 1</td>
+                            <td>2023-10-01</td>
+                            <td>2023-10-05</td>
+                            <td>John Doe</td>
+                            <td>In Progress</td>
+                        </tr>
+                        <tr>
+                            <td>Task 2</td>
+                            <td>2023-10-06</td>
+                            <td>2023-10-10</td>
+                            <td>Jane Smith</td>
+                            <td>Not Started</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <h2>Add New Task</h2>
+                <form action="{{ url_for('projects.field.add_task') }}" method="POST">
+                    <div class="form-group">
+                        <label for="task_name">Task Name</label>
+                        <input type="text" class="form-control" id="task_name" name="task_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="start_date">Start Date</label>
+                        <input type="date" class="form-control" id="start_date" name="start_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="end_date">End Date</label>
+                        <input type="date" class="form-control" id="end_date" name="end_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="assigned_to">Assigned To</label>
+                        <input type="text" class="form-control" id="assigned_to" name="assigned_to" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>

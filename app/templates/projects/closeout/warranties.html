@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warranties</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1 class="mt-4">Warranties</h1>
+        <p>Here you can manage the warranties related to the project.</p>
+
+        <div class="mb-3">
+            <a href="{{ url_for('projects.closeout.create_warranty', project_id=project.id) }}" class="btn btn-primary">Add New Warranty</a>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Expiration Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for warranty in warranties %}
+                <tr>
+                    <td>{{ warranty.id }}</td>
+                    <td>{{ warranty.title }}</td>
+                    <td>{{ warranty.description }}</td>
+                    <td>{{ warranty.expiration_date.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <a href="{{ url_for('projects.closeout.view_warranty', id=warranty.id) }}" class="btn btn-info">View</a>
+                        <a href="{{ url_for('projects.closeout.edit_warranty', id=warranty.id) }}" class="btn btn-warning">Edit</a>
+                        <a href="{{ url_for('projects.closeout.delete_warranty', id=warranty.id) }}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this warranty?');">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+</body>
+</html>
