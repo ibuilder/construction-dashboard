@@ -27,3 +27,4 @@ projects_bp.register_blueprint(bim_bp, url_prefix='/bim')
 projects_bp.register_blueprint(closeout_bp, url_prefix='/closeout')
 projects_bp.register_blueprint(settings_bp, url_prefix='/settings')
 projects_bp.register_blueprint(reports_bp, url_prefix='/reports')
+

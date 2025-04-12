@@ -317,3 +317,21 @@ def run_startup_tasks(app):
         # Start the scheduler if we're not in testing mode
         if not app.testing:
             scheduler.start()
+
+    # Register error handlers
+    register_error_handlers(app)
+    
+    return app
+
+def register_error_handlers(app):
+    from app.utils.error_handlers import (
+        handle_400_error,
+        handle_403_error,
+        handle_404_error,
+        handle_500_error
+    )
+    
+    app.register_error_handler(400, handle_400_error)
+    app.register_error_handler(403, handle_403_error)
+    app.register_error_handler(404, handle_404_error)
+    app.register_error_handler(500, handle_500_error)
