@@ -1,0 +1,221 @@
+{% extends 'layout.html' %}
+
+{% block title %}BIM Dashboard - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">BIM Dashboard</h1>
+        <div>
+            <a href="{{ url_for('projects.bim.create_model', project_id=project.id) }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add New Model
+            </a>
+        </div>
+    </div>
+
+    <!-- Content Row - Summary Cards -->
+    <div class="row">
+        <!-- Model Count Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Total Models</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ models|length }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Open Issues Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Open Issues</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ open_issues_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Latest Uploads Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Models This Month</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recent_models_count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Model Storage Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Storage Used</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ storage_used }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-hdd fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Models Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary">BIM Models</h6>
+            <a href="{{ url_for('projects.bim.models', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                View All Models
+            </a>
+        </div>
+        <div class="card-body">
+            {% if models %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Latest Version</th>
+                                <th>Open Issues</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for model in models %}
+                            <tr>
+                                <td>{{ model.name }}</td>
+                                <td>{{ model.model_type|replace('_', ' ')|title }}</td>
+                                <td>
+                                    {% if model.current_version %}
+                                        v{{ model.current_version.version_number }}
+                                        <small class="text-muted d-block">
+                                            {{ model.current_version.uploaded_at.strftime('%m/%d/%Y') }}
+                                        </small>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Versions</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set open_count = model.open_issues_count %}
+                                    {% if open_count > 0 %}
+                                        <span class="badge bg-warning">{{ open_count }} Open</span>
+                                    {% else %}
+                                        <span class="badge bg-success">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('projects.bim.view_model', project_id=project.id, model_id=model.id) }}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if model.current_version %}
+                                        <a href="{{ url_for('projects.bim.model_viewer', project_id=project.id, model_id=model.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-cube"></i> View
+                                        </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('projects.bim.issues', project_id=project.id, model_id=model.id) }}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted mb-0">No BIM models have been added to this project yet.</p>
+                    <a href="{{ url_for('projects.bim.create_model', project_id=project.id) }}" class="btn btn-sm btn-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> Add Model
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Issues -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Recent Issues</h6>
+        </div>
+        <div class="card-body">
+            {% if recent_issues %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Model</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in recent_issues %}
+                            <tr>
+                                <td>{{ issue.title }}</td>
+                                <td>{{ issue.model.name }}</td>
+                                <td>{{ issue.issue_type|replace('_', ' ')|title }}</td>
+                                <td>
+                                    <span class="badge 
+                                    {% if issue.status == 'open' %}bg-danger
+                                    {% elif issue.status == 'in_progress' %}bg-warning
+                                    {% elif issue.status == 'resolved' %}bg-success
+                                    {% else %}bg-secondary{% endif %}">
+                                        {{ issue.status|replace('_', ' ')|title }}
+                                    </span>
+                                </td>
+                                <td>{{ issue.created_at.strftime('%m/%d/%Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('projects.bim.view_issue', project_id=project.id, model_id=issue.model_id, issue_id=issue.id) }}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted mb-0">No issues have been reported yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

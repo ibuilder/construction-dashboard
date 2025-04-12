@@ -1,0 +1,46 @@
+<!-- filepath: c:\Users\iphoe\OneDrive\Documents\Server\cm-dashboard-flask\construction-dashboard\app\templates\projects\bim\dashboard.html -->
+{% extends 'layout.html' %}
+
+{% block title %}BIM Dashboard - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">BIM Models for Project: {{ project.name }}</h1>
+    
+    <div class="d-flex justify-content-between mb-4">
+        <a href="{{ url_for('projects.bim.upload_model', project_id=project.id) }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Upload New BIM Model
+        </a>
+    </div>
+
+    <div class="row">
+        {% for model in bim_models %}
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Model ID: {{ model.id }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ model.file_path }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-file-earmark-ruled fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center p-2">
+                    <a href="{{ url_for('projects.bim.view_model', project_id=project.id, model_id=model.id) }}" class="text-primary">View Model</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not bim_models %}
+    <div class="alert alert-info" role="alert">
+        No BIM models have been uploaded for this project yet.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

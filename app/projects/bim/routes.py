@@ -1,53 +1,39 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from . import bim_bp
-from app.models.bim import BimModel, CoordinationIssue
-from app.models.project import Project
-from app.extensions import db
-from app.utils.access_control import role_required
+from app.models.bim import BIMModel
+from app.projects.bim.forms import BIMUploadForm
+import os
 
-@bim_bp.route('/models')
-@login_required
-def models():
-    project_id = request.args.get('project_id', type=int)
-    project = Project.query.get_or_404(project_id)
-    bim_models = BimModel.query.filter_by(project_id=project_id).all()
-    return render_template('projects/bim/models.html', project=project, bim_models=bim_models)
+bim_bp = Blueprint('bim', __name__, template_folder='templates')
 
-@bim_bp.route('/models/create', methods=['GET', 'POST'])
+@bim_bp.route('/bim/dashboard')
 @login_required
-@role_required(['Admin', 'Owner', 'Owners Representative', 'General Contractor'])
-def create_model():
-    project_id = request.args.get('project_id', type=int)
-    project = Project.query.get_or_404(project_id)
-    if request.method == 'POST':
-        model_name = request.form['model_name']
-        new_model = BimModel(name=model_name, project_id=project_id, created_by=current_user.id)
-        db.session.add(new_model)
-        db.session.commit()
-        flash('BIM model created successfully!', 'success')
-        return redirect(url_for('projects.bim.models', project_id=project_id))
-    return render_template('projects/bim/create_model.html', project=project)
+def dashboard():
+    """Display the BIM dashboard with available models."""
+    models = BIMModel.query.filter_by(user_id=current_user.id).all()
+    return render_template('projects/bim/dashboard.html', models=models)
 
-@bim_bp.route('/issues')
+@bim_bp.route('/bim/upload', methods=['GET', 'POST'])
 @login_required
-def issues():
-    project_id = request.args.get('project_id', type=int)
-    project = Project.query.get_or_404(project_id)
-    coordination_issues = CoordinationIssue.query.filter_by(project_id=project_id).all()
-    return render_template('projects/bim/issues.html', project=project, coordination_issues=coordination_issues)
+def upload_model():
+    """Upload a new BIM model."""
+    form = BIMUploadForm()
+    if form.validate_on_submit():
+        file = form.file.data
+        if file and file.filename.endswith('.ifc'):
+            file_path = os.path.join('uploads', file.filename)
+            file.save(file_path)
+            new_model = BIMModel(project_id=form.project_id.data, file_path=file_path, user_id=current_user.id)
+            new_model.save()
+            flash('BIM model uploaded successfully!', 'success')
+            return redirect(url_for('bim.dashboard'))
+        else:
+            flash('Invalid file format. Please upload a .IFC file.', 'danger')
+    return render_template('projects/bim/upload.html', form=form)
 
-@bim_bp.route('/issues/create', methods=['GET', 'POST'])
+@bim_bp.route('/bim/model/<int:model_id>')
 @login_required
-@role_required(['Admin', 'Owner', 'Owners Representative', 'General Contractor'])
-def create_issue():
-    project_id = request.args.get('project_id', type=int)
-    project = Project.query.get_or_404(project_id)
-    if request.method == 'POST':
-        issue_description = request.form['issue_description']
-        new_issue = CoordinationIssue(description=issue_description, project_id=project_id, created_by=current_user.id)
-        db.session.add(new_issue)
-        db.session.commit()
-        flash('Coordination issue created successfully!', 'success')
-        return redirect(url_for('projects.bim.issues', project_id=project_id))
-    return render_template('projects/bim/create_issue.html', project=project)
+def view_model(model_id):
+    """View a specific BIM model."""
+    model = BIMModel.query.get_or_404(model_id)
+    return render_template('projects/bim/model.html', model=model)

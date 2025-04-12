@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIM Model Viewer</title>
+    <title>BIM Model Viewer - {{ project.name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bim-viewer.css') }}">
 </head>
 <body>
     <div class="container">
@@ -28,9 +28,14 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/three.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/web-ifc-viewer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bim-viewer.js') }}"></script>
     <script>
-        // JavaScript to handle the 3D model rendering can be added here
+        const modelViewer = new WebIFCViewer(document.getElementById('model-viewer'));
+        const ifcURL = "{{ url_for('static', filename=model.file_path) }}"; // Assuming model.file_path contains the IFC file path
+
+        modelViewer.loadIfcUrl(ifcURL);
     </script>
 </body>
 </html>

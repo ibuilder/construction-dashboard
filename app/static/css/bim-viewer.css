@@ -1,0 +1,211 @@
+/* BIM Viewer Styles */
+
+/* BIM Viewer Container */
+.bim-viewer {
+    width: 100%;
+    height: 600px;
+    position: relative;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.bim-viewer.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+}
+
+/* Loading indicator */
+.loading-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.7);
+    z-index: 100;
+    color: #4e73df;
+}
+
+/* Error message */
+.error-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 20px;
+}
+
+/* Viewer controls */
+.viewer-controls {
+    display: flex;
+    gap: 10px;
+}
+
+/* Viewer toolbar */
+.viewer-toolbar {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.model-info {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Issue markers */
+.issue-marker {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    margin-left: -12px;
+    margin-top: -12px;
+    border-radius: 50%;
+    background-color: rgba(255, 193, 7, 0.8);
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    z-index: 5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 12px;
+    color: #333;
+    transition: transform 0.2s ease-out;
+}
+
+.issue-marker:hover {
+    transform: scale(1.2);
+    background-color: rgba(255, 193, 7, 1);
+}
+
+.issue-marker.high-priority {
+    background-color: rgba(220, 53, 69, 0.8);
+    color: #fff;
+}
+
+.issue-marker.high-priority:hover {
+    background-color: rgba(220, 53, 69, 1);
+}
+
+/* Tooltip */
+.tooltip-container {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    z-index: 20;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+    transform: translate(-50%, -100%);
+    margin-top: -10px;
+}
+
+.tooltip-container::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    margin-left: -10px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: white transparent transparent transparent;
+}
+
+/* Saved view card */
+.view-card {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.view-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Properties panel */
+.properties-panel {
+    max-height: 400px;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.properties-panel-header {
+    background-color: var(--bs-primary);
+    color: white;
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.properties-panel-content {
+    padding: 1rem;
+}
+
+.property-group {
+    margin-bottom: 1rem;
+}
+
+.property-group-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.property-row {
+    display: flex;
+    padding: 8px 0;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+.property-name {
+    font-weight: bold;
+    width: 40%;
+}
+
+.property-value {
+    width: 60%;
+}
+
+/* Tools menu */
+.tools-menu {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    z-index: 10;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .viewer-controls {
+        flex-direction: column;
+    }
+    
+    .properties-panel {
+        width: 100%;
+    }
+}
