@@ -13,6 +13,7 @@
         </a>
     </div>
 
+    {% if bim_models %}
     <div class="row">
         {% for model in bim_models %}
         <div class="col-xl-4 col-md-6 mb-4">
@@ -21,23 +22,43 @@
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Model ID: {{ model.id }}</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ model.file_path }}</div>
+                                {{ model.model_type|replace('_', ' ')|title }}</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ model.name }}</div>
+                            {% if model.current_version %}
+                            <div class="text-xs text-muted mt-1">
+                                Version: {{ model.current_version.version_number }} | 
+                                Last Updated: {{ model.current_version.uploaded_at.strftime('%Y-%m-%d') }}
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="col-auto">
-                            <i class="bi bi-file-earmark-ruled fa-2x text-gray-300"></i>
+                            <i class="bi bi-building fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.bim.view_model', project_id=project.id, model_id=model.id) }}" class="text-primary">View Model</a>
+                    <div class="btn-group">
+                        {% if model.current_version %}
+                        <a href="{{ url_for('projects.bim.view_model', project_id=project.id, model_id=model.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-eye"></i> View Model
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('projects.bim.model_versions', project_id=project.id, model_id=model.id) }}" class="btn btn-sm btn-info">
+                            <i class="bi bi-layers"></i> Versions
+                        </a>
+                        <a href="{{ url_for('projects.bim.issues', project_id=project.id, model_id=model.id) }}" class="btn btn-sm btn-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Issues 
+                            {% if model.open_issues_count > 0 %}
+                            <span class="badge bg-danger">{{ model.open_issues_count }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-
-    {% if not bim_models %}
+    {% else %}
     <div class="alert alert-info" role="alert">
         No BIM models have been uploaded for this project yet.
     </div>

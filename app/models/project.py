@@ -1,92 +1,64 @@
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import Column, Integer, String, Text, Numeric, DateTime, Date, ForeignKey
 from app.extensions import db
-import datetime
-from enum import Enum
-
-class ProjectStatus(str, Enum):
-    PLANNING = 'planning'
-    ACTIVE = 'active'
-    ON_HOLD = 'on_hold'
-    COMPLETED = 'completed'
-    CANCELLED = 'cancelled'
+from datetime import datetime
+from sqlalchemy.orm import relationship
 
 class Project(db.Model):
     __tablename__ = 'projects'
     
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    number = db.Column(db.String(64), unique=True, index=True)
+    name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    status = db.Column(db.String(20), default=ProjectStatus.PLANNING.value)
-    
-    # Dates
-    start_date = db.Column(db.Date)
-    target_completion_date = db.Column(db.Date)
-    actual_completion_date = db.Column(db.Date)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow, 
-                         onupdate=datetime.datetime.utcnow)
-    
-    # Location info
-    address = db.Column(db.String(255))
-    city = db.Column(db.String(100))
-    state = db.Column(db.String(100))
-    zip_code = db.Column(db.String(20))
-    country = db.Column(db.String(100), default='USA')
-    latitude = db.Column(db.Float)
-    longitude = db.Column(db.Float)
-    
-    # Key project info
-    contract_amount = db.Column(db.Float, default=0.0)
-    client_name = db.Column(db.String(255))
-    client_contact_info = db.Column(db.Text)
-    
-    # Project type and category
-    project_type = db.Column(db.String(100))
-    category = db.Column(db.String(100))
-    
-    # Timestamps and metadata
-    archived = db.Column(db.Boolean, default=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date)
+    budget = db.Column(db.Numeric(15, 2))
+    actual_cost = db.Column(db.Numeric(15, 2))
+    status = db.Column(db.String(20), default='planned')  # planned, in_progress, completed, on_hold
+    client_id = db.Column(db.Integer, db.ForeignKey('clients.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    users = db.relationship('ProjectUser', back_populates='project', lazy='dynamic')
+    client = relationship('Client', back_populates='projects')
+    team_members = relationship('ProjectTeamMember', back_populates='project', cascade='all, delete-orphan')
+    tasks = relationship('Task', back_populates='project', cascade='all, delete-orphan')
+    documents = relationship('Document', back_populates='project', cascade='all, delete-orphan')
+    bim_models = relationship('BIMModel', back_populates='project', cascade='all, delete-orphan')
+    contracts = relationship('Contract', back_populates='project', cascade='all, delete-orphan')
     
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'number': self.number,
-            'description': self.description,
-            'status': self.status,
-            'start_date': self.start_date.isoformat() if self.start_date else None,
-            'target_completion_date': self.target_completion_date.isoformat() if self.target_completion_date else None,
-            'actual_completion_date': self.actual_completion_date.isoformat() if self.actual_completion_date else None,
-            'address': self.address,
-            'city': self.city,
-            'state': self.state,
-            'zip_code': self.zip_code,
-            'country': self.country,
-            'contract_amount': self.contract_amount,
-            'client_name': self.client_name,
-            'project_type': self.project_type,
-            'category': self.category,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-        }
-
-class ProjectUser(db.Model):
-    __tablename__ = 'project_users'
+    @property
+    def percent_complete(self):
+        """Calculate the project completion percentage based on tasks"""
+        if not self.tasks:
+            return 0
+            
+        completed_tasks = sum(1 for task in self.tasks if task.status == 'completed')
+        return int((completed_tasks / len(self.tasks)) * 100)
     
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    role = db.Column(db.String(100), default='member')
+    @property
+    def duration_days(self):
+        """Calculate project duration in days"""
+        if not self.start_date:
+            return 0
+            
+        end = self.end_date or datetime.utcnow().date()
+        return (end - self.start_date).days
     
-    # Define the relationships
-    user = db.relationship('User', back_populates='projects')
-    project = db.relationship('Project', back_populates='users')
-    
-    # Timestamps
-    added_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    
-    __table_args__ = (db.UniqueConstraint('user_id', 'project_id', name='uix_user_project'),)
+    @property
+    def budget_status(self):
+        """Calculate budget status"""
+        if not self.budget or self.budget <= 0:
+            return 'not_set'
+            
+        if not self.actual_cost:
+            return 'within_budget'
+            
+        variance = float(self.budget) - float(self.actual_cost)
+        variance_percent = (variance / float(self.budget)) * 100
+        
+        if variance_percent >= 5:
+            return 'under_budget'
+        elif variance_percent <= -5:
+            return 'over_budget'
+        else:
+            return 'within_budget'
