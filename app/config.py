@@ -220,3 +220,17 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'ERROR')  # Default to ERROR in production
+    
+    # Database engine options for production
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': int(os.environ.get('DB_POOL_SIZE', 10)),
+        'max_overflow': int(os.environ.get('DB_MAX_OVERFLOW', 20)),
+        'pool_timeout': int(os.environ.get('DB_POOL_TIMEOUT', 30)),
+        'pool_recycle': int(os.environ.get('DB_POOL_RECYCLE', 1800)),  # Recycle connections after 30 min
+        'pool_pre_ping': True,  # Enable connection verification before use
+    }
+
+# Flask app configuration
+app.config['SESSION_COOKIE_SECURE'] = True  # Only send cookies over HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to cookies
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Limit session lifetime

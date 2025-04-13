@@ -41,19 +41,27 @@ def configure_security(app):
     def add_security_headers(response):
         """Add security headers to response"""
         
-        # Content Security Policy
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+        # Get CSP settings from config
+        csp_settings = current_app.config.get('CSP_SETTINGS', {})
         
-        # Prevent MIME type sniffing
+        # Build CSP header value
+        csp_parts = []
+        for directive, sources in csp_settings.items():
+            if sources:  # Skip empty sources
+                source_string = ' '.join(sources)
+                csp_parts.append(f"{directive} {source_string}")
+            else:  # Handle directives with no sources (like upgrade-insecure-requests)
+                csp_parts.append(directive)
+        
+        if csp_parts:
+            response.headers['Content-Security-Policy'] = '; '.join(csp_parts)
+        
+        # Add other security headers
         response.headers['X-Content-Type-Options'] = 'nosniff'
-        
-        # Cross-site scripting protection
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         
-        # Frame options
-        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        
-        # HTTP Strict Transport Security
+        # Add HSTS header in production
         if current_app.config.get('ENV') == 'production':
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
         

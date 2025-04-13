@@ -7,6 +7,7 @@ from flask_moment import Moment
 from flask_caching import Cache
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask import Flask
 from datetime import datetime
 import threading
 import logging
@@ -138,6 +139,23 @@ monitor = ApplicationMonitor()
 from app.utils.scheduler import TaskScheduler
 scheduler = TaskScheduler()
 
-# And update the __init__.py to initialize it:
-# Inside create_app function
-scheduler.init_app(app)
+def create_app(config_class=None):
+    if config_class is None:
+        from app.config_factory import get_config
+        config_class = get_config()
+        
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    csrf.init_app(app)
+    mail.init_app(app)
+    moment.init_app(app)
+    cache.init_app(app)
+    limiter.init_app(app)
+    monitor.init_app(app)
+    scheduler.init_app(app)
+    
+    return app

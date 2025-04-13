@@ -209,3 +209,18 @@ def api_projects():
     # Format for select2
     results = [{'id': p.id, 'text': p.name} for p in projects]
     return jsonify({'results': results})
+
+@app.route('/health/liveness')
+def liveness():
+    return jsonify({'status': 'ok'}), 200
+    
+@app.route('/health/readiness')
+def readiness():
+    # Check dependencies are ready
+    database_ok = check_db_connection()
+    cache_ok = check_cache_connection()
+    return jsonify({
+        'status': 'ok' if database_ok and cache_ok else 'degraded',
+        'database': database_ok,
+        'cache': cache_ok
+    }), 200 if database_ok and cache_ok else 503

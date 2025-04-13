@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, abort
 from flask_login import login_required, current_user
 from app.models.project import Project
 from app.models.engineering import RFI, Submittal
@@ -13,6 +13,17 @@ import hashlib
 import json
 
 api_bp = Blueprint('api', __name__)
+
+def validate_api_key():
+    api_key = request.headers.get('X-API-Key')
+    if not api_key or not check_valid_api_key(api_key):
+        abort(401, description="Invalid API key")
+
+# Apply to all API routes
+@api_bp.before_request
+@limiter.limit("60 per minute")
+def limit_api_requests():
+    pass
 
 @api_bp.route('/projects')
 @token_auth.login_required

@@ -10,7 +10,11 @@ import time
 # Define Swagger URL constant
 SWAGGER_URL = '/api/docs'  # URL for exposing Swagger UI
 
-def create_app(config_class=Config):
+def create_app(config_class=None):
+    if config_class is None:
+        from app.config_factory import get_config
+        config_class = get_config()
+        
     app = Flask(__name__)
     app.config.from_object(config_class)
     
@@ -232,9 +236,10 @@ def register_shell_context(app):
 def check_db_connection():
     """Check database connection"""
     try:
-        db.session.execute('SELECT 1')
-        return True
-    except Exception:
+        result = db.session.execute('SELECT 1').scalar()
+        return result == 1
+    except Exception as e:
+        current_app.logger.error(f"Database connection failed: {str(e)}")
         return False
 
 def exempt_csrf_for_api_routes(app):
