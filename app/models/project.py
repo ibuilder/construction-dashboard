@@ -4,6 +4,10 @@ from datetime import datetime
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import select, func
+from app.models.preconstruction import BidPackage
+from app.models.bim import BIMModel
+from app.models.contracts import PrimeContract, Subcontract, ProfessionalServiceAgreement
+from app.models.closeout import OperationAndMaintenanceManual, Warranty, AtticStock, FinalInspection, AsBuiltDrawing
 
 class Project(db.Model):
     __tablename__ = 'projects'
@@ -28,6 +32,12 @@ class Project(db.Model):
     bim_models = relationship('BIMModel', back_populates='project', cascade='all, delete-orphan')
     schedules = relationship('Schedule', back_populates='project', cascade='all, delete-orphan')
     contracts = relationship('Contract', back_populates='project', cascade='all, delete-orphan')
+    om_manuals = db.relationship('OperationAndMaintenanceManual', back_populates='project', cascade='all, delete-orphan')
+    warranties = db.relationship('Warranty', back_populates='project', cascade='all, delete-orphan')
+    attic_stock = db.relationship('AtticStock', back_populates='project', cascade='all, delete-orphan')
+    final_inspections = db.relationship('FinalInspection', back_populates='project', cascade='all, delete-orphan')
+    as_built_drawings = db.relationship('AsBuiltDrawing', back_populates='project', cascade='all, delete-orphan')
+    closeout_documents = db.relationship('CloseoutDocument', back_populates='project', cascade='all, delete-orphan')
     
     @property
     def percent_complete(self):

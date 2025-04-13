@@ -1,5 +1,7 @@
 from flask import Blueprint
 
-bim_bp = Blueprint('bim', __name__, template_folder='templates')
+# Create blueprint with a simple name - parent relationships are handled during registration
+bp = Blueprint('bim', __name__)
 
-from . import routes, forms
+# Import routes at the end to avoid circular imports
+from app.projects.bim import routes

@@ -1,7 +1,8 @@
-from flask import request, g, current_app
+from flask import request, g, current_app, abort
 from werkzeug.exceptions import Forbidden
 import re
 import ipaddress
+from functools import wraps
 
 def configure_security(app):
     """Configure security middlewares and settings"""
@@ -38,31 +39,24 @@ def configure_security(app):
 
     @app.after_request
     def add_security_headers(response):
-        """Add security headers to all responses"""
-        # Security headers
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-        response.headers['X-XSS-Protection'] = '1; mode=block'
+        """Add security headers to response"""
         
         # Content Security Policy
-        # Adjust as needed for your application
-        csp_directives = [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'", 
-            "style-src 'self' 'unsafe-inline'",
-            "img-src 'self' data: blob:",
-            "font-src 'self' data:",
-            "connect-src 'self'",
-            "frame-ancestors 'self'",
-            "form-action 'self'",
-        ]
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
         
-        response.headers['Content-Security-Policy'] = '; '.join(csp_directives)
+        # Prevent MIME type sniffing
+        response.headers['X-Content-Type-Options'] = 'nosniff'
         
-        # Only send cookies over HTTPS in production
-        if not current_app.debug and not current_app.testing:
+        # Cross-site scripting protection
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        
+        # Frame options
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        
+        # HTTP Strict Transport Security
+        if current_app.config.get('ENV') == 'production':
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-            
+        
         return response
 
 def allowed_file(filename):
@@ -123,6 +117,28 @@ def has_sql_injection(request):
                 return True
     
     return False
+
+def validate_input(func):
+    """Decorator to validate input parameters for SQL injection"""
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        # Define patterns for potentially malicious input
+        sql_injection_pattern = re.compile(r'((\%27)|(\'))((\%6F)|o|(\%4F))((\%72)|r|(\%52))', re.IGNORECASE)
+        
+        # Check all request args
+        for key, value in request.args.items():
+            if isinstance(value, str) and sql_injection_pattern.search(value):
+                current_app.logger.warning(f"Potential SQL injection attempt detected in request args: {key}={value}")
+                abort(400, "Invalid request parameters")
+        
+        # Check all form data
+        for key, value in request.form.items():
+            if isinstance(value, str) and sql_injection_pattern.search(value):
+                current_app.logger.warning(f"Potential SQL injection attempt detected in form data: {key}={value}")
+                abort(400, "Invalid form data")
+        
+        return func(*args, **kwargs)
+    return decorated_function
 
 def get_client_ip():
     """Get client IP address, respecting proxies"""

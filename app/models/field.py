@@ -293,6 +293,8 @@ class Punchlist(db.Model):
     def __init__(self, **kwargs):
         super(Punchlist, self).__init__(**kwargs)
         if not self.punchlist_number:
+            # Generate a unique punchlist number
+            import uuid
             self.punchlist_number = f"PL-{uuid.uuid4().hex[:8].upper()}"
 
 class PunchlistItem(db.Model):
@@ -320,11 +322,29 @@ class PunchlistItem(db.Model):
     creator = db.relationship('User', foreign_keys=[created_by])
     closer = db.relationship('User', foreign_keys=[closed_by])
 
+    def __repr__(self):
+        return f"<PunchlistItem {self.id}: {self.title}>"
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'project_id': self.project_id,
+            'title': self.title,
+            'description': self.description,
+            'location': self.location,
+            'responsible_party': self.responsible_party,
+            'due_date': self.due_date.isoformat() if self.due_date else None,
+            'priority': self.priority,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_by': self.created_by
+        }
+
 class Checklist(db.Model):
     """Checklist model for inspections and quality control"""
     __tablename__ = 'checklists'
     
-    id = db.Column(db.Integer, primary key=True)
+    id = db.Column(db.Integer, primary_key=True)  # Fixed 'primary key=' to 'primary_key='
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     checklist_number = db.Column(db.String(50), unique=True)
     title = db.Column(db.String(100), nullable=False)
@@ -345,18 +365,23 @@ class Checklist(db.Model):
     def __init__(self, **kwargs):
         super(Checklist, self).__init__(**kwargs)
         if not self.checklist_number:
+            # Generate a unique checklist number
+            import uuid
             self.checklist_number = f"CL-{uuid.uuid4().hex[:8].upper()}"
         
         # Convert items from text to JSON if needed
         if 'items' in kwargs and isinstance(kwargs['items'], str):
-            items_list = [item.strip() for item in kwargs['items'].strip().split('\n') if item.strip()]
-            self.items = json.dumps(items_list)
+            import json
+            try:
+                self.items = json.dumps(json.loads(kwargs['items']))
+            except:
+                self.items = json.dumps([])
 
 class Schedule(db.Model):
     """Schedule model for field activities"""
     __tablename__ = 'schedules'
     
-    id = db.Column(db.Integer, primary key=True)
+    id = db.Column(db.Integer, primary_key=True)  # Fixed syntax
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
@@ -380,7 +405,7 @@ class PullPlan(db.Model):
     """Pull planning model for collaborative scheduling"""
     __tablename__ = 'pull_plans'
     
-    id = db.Column(db.Integer, primary key=True)
+    id = db.Column(db.Integer, primary_key=True)  # Fixed syntax
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
@@ -452,64 +477,15 @@ class FieldPhoto(db.Model):
             'description': self.description,
             'file_path': self.file_path,
             'file_name': self.file_name,
-            'file_size': self.file_size,
-            'file_type': self.file_type,
             'location': self.location,
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-            'taken_at': self.taken_at.isoformat() if self.taken_at else None,
-            'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None
+            'uploaded_at': self.uploaded_at.isoformat() if self.uploaded_at else None,
+            'uploaded_by': self.uploaded_by
         }
     
     @property
     def url(self):
-        return f'/uploads/photos/{self.file_path}'
-
-class PunchlistItem(db.Model):
-    __tablename__ = 'punchlist_items'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text)
-    location = db.Column(db.String(255))
-    responsible_party = db.Column(db.String(100))
-    due_date = db.Column(db.Date)
-    priority = db.Column(db.String(20), default='medium')  # low, medium, high, critical
-    status = db.Column(db.String(20), default='open')  # open, in_progress, complete, verified
-    created_at = db.Column(db.DateTime, default=func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
-    updated_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    closed_at = db.Column(db.DateTime)
-    closed_by = db.Column(db.Integer, db.ForeignKey('users.id'))
-    
-    # Relationships
-    project = db.relationship('Project', backref='punchlist_items')
-    creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='punchlist_item',
-                             primaryjoin="and_(Comment.record_type=='punchlist_item', "
-                                        "Comment.record_id==PunchlistItem.id)")
-    photos = db.relationship('FieldPhoto', secondary='punchlist_photos',
-                           backref=db.backref('punchlist_items'))
-    
-    def __repr__(self):
-        return f'<PunchlistItem {self.id} - {self.title}>'
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'project_id': self.project_id,
-            'title': self.title,
-            'description': self.description,
-            'location': self.location,
-            'responsible_party': self.responsible_party,
-            'due_date': self.due_date.isoformat() if self.due_date else None,
-            'priority': self.priority,
-            'status': self.status,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'created_by': self.created_by
-        }
+        from flask import url_for
+        return url_for('static', filename=f'uploads/photos/{self.file_name}')
 
 # Association table for punchlist items and photos
 punchlist_photos = db.Table('punchlist_photos',

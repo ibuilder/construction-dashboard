@@ -80,32 +80,32 @@ def create_app(config_class=Config):
         raise e
     
     # Register blueprints
-    from app.auth.routes import auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-    
-    from app.dashboard.routes import dashboard_bp
-    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
-    
+    from app.auth import auth_bp
+    from app.dashboard import dashboard_bp
     from app.projects import projects_bp
+    from app.admin import admin_bp
+    from app.api import api_bp
+    
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(projects_bp, url_prefix='/projects')
-    
-    from app.admin.routes import admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
-    
-    # Register API blueprints
-    from app.api.routes import api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
-    
-    from app.api.mobile_routes import mobile_bp
-    app.register_blueprint(mobile_bp, url_prefix='/api/mobile')
     
     from app.api.swagger import swagger_bp, swagger_ui_bp
     app.register_blueprint(swagger_bp, url_prefix='/api')
     app.register_blueprint(swagger_ui_bp, url_prefix=SWAGGER_URL)
     
     # Register error handlers
-    from app.errors.handlers import error_bp
-    app.register_blueprint(error_bp)
+    from app.utils.error_handlers import (
+        handle_400_error, handle_403_error, 
+        handle_404_error, handle_500_error
+    )
+    
+    app.register_error_handler(400, handle_400_error)
+    app.register_error_handler(403, handle_403_error)
+    app.register_error_handler(404, handle_404_error)
+    app.register_error_handler(500, handle_500_error)
     
     # Create context processor to make global variables available in templates
     @app.context_processor
@@ -183,7 +183,8 @@ def create_app(config_class=Config):
     # Exempt API routes from CSRF protection
     exempt_csrf_for_api_routes(app)
     
-    # Set up logging
+    # Configure logging
+    from app.utils.logger import configure_logging
     configure_logging(app)
     
     # Register shell context processor
@@ -192,34 +193,16 @@ def create_app(config_class=Config):
     # Run startup tasks
     run_startup_tasks(app)
     
+    # Add security middleware
+    from app.utils.security import add_security_headers
+    app.after_request(add_security_headers)
+    
     return app
 
 def generate_request_id():
     """Generate a unique ID for the current request"""
     import uuid
     return str(uuid.uuid4())
-
-def configure_logging(app):
-    """Configure logging for the application"""
-    if not app.debug and not app.testing:
-        # Create logs directory if it doesn't exist
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-            
-        # Set up file handler
-        file_handler = RotatingFileHandler('logs/construction_dashboard.log', 
-                                          maxBytes=10485760, backupCount=10)
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        file_handler.setLevel(logging.INFO)
-        
-        # Add handlers
-        app.logger.addHandler(file_handler)
-        app.logger.setLevel(logging.INFO)
-        app.logger.info('Construction Dashboard startup')
-    
-    return None
 
 def register_shell_context(app):
     """Register shell context objects"""
