@@ -1,5 +1,7 @@
 from flask import Blueprint
 
-cost_bp = Blueprint('cost', __name__, template_folder='templates')
+# Create blueprint with standard naming pattern
+bp = Blueprint('cost', __name__)
 
-from . import routes
+# Import routes at the end to avoid circular imports
+from app.projects.cost import routes
