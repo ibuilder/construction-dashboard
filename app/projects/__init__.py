@@ -1,4 +1,7 @@
-from flask import Blueprint
+from flask import Flask, Blueprint
+
+# Create Flask application object
+app = Flask(__name__)
 
 # Create main projects blueprint
 projects_bp = Blueprint('projects', __name__, url_prefix='/projects')
@@ -27,3 +30,5 @@ projects_bp.register_blueprint(reports_bp, url_prefix='/<int:project_id>/reports
 projects_bp.register_blueprint(safety_bp, url_prefix='/<int:project_id>/safety')
 projects_bp.register_blueprint(settings_bp, url_prefix='/<int:project_id>/settings')
 
+# Register main blueprint with application object
+app.register_blueprint(projects_bp)
