@@ -11,7 +11,7 @@ import datetime
 
 bim_bp = Blueprint('bim', __name__)
 
-@bim_bp.route('/')
+@bim_bp.route('/bim')
 @login_required
 @project_access_required
 def index(project_id):

@@ -54,3 +54,19 @@ def delete_file(file_path):
         return False
     except Exception:
         return False
+    
+def get_file_url(file_path):
+    """
+    Get the URL for a stored file
+    
+    Args:
+        file_path: Path to the file relative to UPLOAD_FOLDER
+        
+    Returns:
+        URL for accessing the file
+    """
+    if not file_path:
+        return None
+        
+    from flask import url_for
+    return url_for('static', filename=f'uploads/{file_path}')

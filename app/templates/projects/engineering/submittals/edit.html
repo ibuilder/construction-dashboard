@@ -1,0 +1,195 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Submittal #{{ submittal.number }} - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ project.name }}</h1>
+            <p class="text-muted">{{ project.number }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('engineering.view_submittal', id=submittal.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Submittal
+            </a>
+        </div>
+    </div>
+    
+    <!-- Project Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_overview.index', project_id=project.id) }}">
+                                <i class="fas fa-home"></i> Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-drafting-compass"></i> Engineering
+                            </a>
+                        </li>
+                        <!-- Add more module links here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Engineering Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('engineering.dashboard', project_id=project.id) }}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-question-circle"></i> RFIs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('engineering.submittals', project_id=project.id) }}">
+                                <i class="fas fa-file-alt"></i> Submittals
+                            </a>
+                        </li>
+                        <!-- Add more engineering tabs here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Edit Submittal #{{ submittal.number }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('engineering.edit_submittal', id=submittal.id) }}" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.number.id }}" class="form-label">{{ form.number.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.number(class="form-control" + (" is-invalid" if form.number.errors else ""), readonly=true) }}
+                            {% for error in form.number.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.specification_section.id }}" class="form-label">{{ form.specification_section.label.text }}</label>
+                            {{ form.specification_section(class="form-control" + (" is-invalid" if form.specification_section.errors else ""), placeholder="e.g., 06 10 00") }}
+                            {% for error in form.specification_section.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Enter the CSI specification section</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="{{ form.title.id }}" class="form-label">{{ form.title.label.text }} <span class="text-danger">*</span></label>
+                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                    {% for error in form.title.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }}</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=5) }}
+                    {% for error in form.description.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="{{ form.date_required.id }}" class="form-label">{{ form.date_required.label.text }}</label>
+                    {{ form.date_required(class="form-control datepicker" + (" is-invalid" if form.date_required.errors else ""), type="date") }}
+                    {% for error in form.date_required.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Date by which a response is needed</small>
+                </div>
+                
+                <!-- Only show these fields to reviewers -->
+                {% if current_user.role in ['Admin', 'Project Manager', 'Engineer'] %}
+                <div class="card mb-3 bg-light">
+                    <div class="card-header">
+                        <h5 class="mb-0">Review Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select name="status" id="status" class="form-select">
+                                        <option value="pending" {% if submittal.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="under_review" {% if submittal.status == 'under_review' %}selected{% endif %}>Under Review</option>
+                                        <option value="approved" {% if submittal.status == 'approved' %}selected{% endif %}>Approved</option>
+                                        <option value="approved_with_comments" {% if submittal.status == 'approved_with_comments' %}selected{% endif %}>Approved with Comments</option>
+                                        <option value="revise_and_resubmit" {% if submittal.status == 'revise_and_resubmit' %}selected{% endif %}>Revise and Resubmit</option>
+                                        <option value="rejected" {% if submittal.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="date_returned" class="form-label">Date Returned</label>
+                                    <input type="date" name="date_returned" id="date_returned" class="form-control" value="{{ submittal.date_returned.strftime('%Y-%m-%d') if submittal.date_returned else '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="review_comments" class="form-label">Review Comments</label>
+                            <textarea name="review_comments" id="review_comments" rows="3" class="form-control">{{ submittal.review_comments or '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="form-group mb-3">
+                    <label class="form-label">Attach Additional Files</label>
+                    <div class="input-group">
+                        <input type="file" name="files[]" class="form-control" multiple>
+                    </div>
+                    <small class="form-text text-muted">You can attach additional files to this submittal</small>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('engineering.view_submittal', id=submittal.id) }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Submittal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize datepicker if using a JavaScript date picker library
+    $(document).ready(function() {
+        // If using a datepicker plugin
+        if ($.fn.datepicker) {
+            $('.datepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true
+            });
+        }
+    });
+</script>
+{% endblock %}

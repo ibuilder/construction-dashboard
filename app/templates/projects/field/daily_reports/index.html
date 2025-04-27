@@ -1,0 +1,270 @@
+<!-- app/templates/projects/field/daily_reports/index.html -->
+{% extends "layout.html" %}
+
+{% block title %}{{ project.name }} - Daily Reports{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Daily Reports</h1>
+            <p class="text-muted">{{ project.name }} ({{ project.number }})</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_field.index', project_id=project.id) }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Field Dashboard
+            </a>
+            <a href="{{ url_for('projects_field.create_daily_report', project_id=project.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Report
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filter Options -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Filter Options</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="dateFrom" class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="dateFrom" name="date_from" value="{{ request.args.get('date_from', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="dateTo" class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="dateTo" name="date_to" value="{{ request.args.get('date_to', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="all" {% if request.args.get('status') == 'all' or not request.args.get('status') %}selected{% endif %}>All</option>
+                        <option value="draft" {% if request.args.get('status') == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="submitted" {% if request.args.get('status') == 'submitted' %}selected{% endif %}>Submitted</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="workStatus" class="form-label">Work Status</label>
+                    <select class="form-select" id="workStatus" name="work_status">
+                        <option value="all" {% if request.args.get('work_status') == 'all' or not request.args.get('work_status') %}selected{% endif %}>All</option>
+                        <option value="working" {% if request.args.get('work_status') == 'working' %}selected{% endif %}>Working (Normal)</option>
+                        <option value="delayed" {% if request.args.get('work_status') == 'delayed' %}selected{% endif %}>Delayed</option>
+                        <option value="halted" {% if request.args.get('work_status') == 'halted' %}selected{% endif %}>Halted</option>
+                    </select>
+                </div>
+                <div class="col-12 mt-3">
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="{{ url_for('projects_field.daily_reports', project_id=project.id) }}" class="btn btn-outline-secondary">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Reports Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Daily Reports</h6>
+            
+            {% if reports and reports.items %}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-download me-1"></i> Export
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                        <li><a class="dropdown-item" href="{{ url_for('projects_field.daily_reports', project_id=project.id, format='csv') }}">Export to CSV</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('projects_field.daily_reports', project_id=project.id, format='excel') }}">Export to Excel</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('projects_field.daily_reports', project_id=project.id, format='pdf') }}">Export to PDF</a></li>
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if reports and reports.items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Report #</th>
+                                <th>Status</th>
+                                <th>Weather</th>
+                                <th>Work Status</th>
+                                <th>Created By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports.items %}
+                                <tr>
+                                    <td>{{ report.report_date.strftime('%m/%d/%Y') if report.report_date else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('projects_field.view_daily_report', project_id=project.id, report_id=report.id) }}">
+                                            {{ report.report_number }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if report.is_submitted %}
+                                            <span class="badge bg-success">Submitted</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Draft</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ report.weather_condition|title }}</td>
+                                    <td>
+                                        {% if report.work_status == 'working' %}
+                                            <span class="badge bg-success">Working</span>
+                                        {% elif report.work_status == 'delayed' %}
+                                            <span class="badge bg-warning">Delayed</span>
+                                        {% elif report.work_status == 'halted' %}
+                                            <span class="badge bg-danger">Halted</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ report.author.name if report.author else 'Unknown' }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('projects_field.view_daily_report', project_id=project.id, report_id=report.id) }}" class="btn btn-outline-primary" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% if not report.is_submitted or current_user.is_admin() %}
+                                                <a href="{{ url_for('projects_field.edit_daily_report', project_id=project.id, report_id=report.id) }}" class="btn btn-outline-secondary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            {% endif %}
+                                            <a href="#" class="btn btn-outline-success" title="Download PDF" onclick="event.preventDefault(); downloadPDF({{ report.id }});">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if reports.pages > 1 %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if reports.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('projects_field.daily_reports', project_id=project.id, page=reports.prev_num) }}">Previous</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">Previous</span>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in reports.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    {% if page_num == reports.page %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('projects_field.daily_reports', project_id=project.id, page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if reports.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('projects_field.daily_reports', project_id=project.id, page=reports.next_num) }}">Next</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">Next</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No daily reports have been created for this project yet.
+                </div>
+                <div class="text-center my-4">
+                    <a href="{{ url_for('projects_field.create_daily_report', project_id=project.id) }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i> Create First Daily Report
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    {% if reports and reports.items %}
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body text-center">
+                        <h2 class="counter">{{ reports.total }}</h2>
+                        <p class="text-muted mb-0">Total Reports</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body text-center">
+                        <h2 class="counter">{{ submitted_count|default(0) }}</h2>
+                        <p class="text-muted mb-0">Submitted Reports</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body text-center">
+                        <h2 class="counter">{{ draft_count|default(0) }}</h2>
+                        <p class="text-muted mb-0">Draft Reports</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-body text-center">
+                        <h2 class="counter">{{ delayed_count|default(0) }}</h2>
+                        <p class="text-muted mb-0">Delayed Work Days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function downloadPDF(reportId) {
+        window.location.href = "{{ url_for('projects_field.daily_reports', project_id=project.id) }}/" + reportId + "/pdf";
+    }
+    
+    // Initialize counters animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200;
+        
+        counters.forEach(counter => {
+            const target = +counter.innerText;
+            const count = 0;
+            const inc = target / speed;
+            
+            let counting = setInterval(() => {
+                const currentCount = Math.ceil(+counter.innerText);
+                if (currentCount < target) {
+                    counter.innerText = Math.ceil(currentCount + inc);
+                } else {
+                    counter.innerText = target;
+                    clearInterval(counting);
+                }
+            }, 1);
+        });
+    });
+</script>
+{% endblock %}

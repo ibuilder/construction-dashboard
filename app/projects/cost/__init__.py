@@ -1,7 +1,7 @@
+# app/projects/cost/__init__.py
 from flask import Blueprint
 
-# Create blueprint with standard naming pattern
-bp = Blueprint('cost', __name__)
+cost_bp = Blueprint('cost', __name__, url_prefix='/projects/cost')
 
-# Import routes at the end to avoid circular imports
+# Import routes after creating the blueprint
 from app.projects.cost import routes

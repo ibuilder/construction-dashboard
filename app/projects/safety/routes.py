@@ -21,7 +21,55 @@ import calendar
 import os
 import uuid
 
-safety_bp = Blueprint('projects.safety', __name__)
+from app.utils.access_control import project_access_required, has_project_access
+safety_bp = Blueprint('projects_safety', __name__)
+
+@safety_bp.route('/<int:project_id>/safely')
+@project_access_required
+@login_required
+def index(project_id):
+    """Safety dashboard view"""
+
+    project = Project.query.get_or_404(project_id)
+    
+    # Get counts for widgets
+    try:
+        observations_count = SafetyObservation.query.filter_by(project_id=project_id).count()
+    except:
+        observations_count = 0
+        
+    try:
+        incidents_count = IncidentReport.query.filter_by(project_id=project_id).count()
+    except:
+        incidents_count = 0
+        
+    try:
+        jha_count = JobHazardAnalysis.query.filter_by(project_id=project_id).count()
+    except:
+        jha_count = 0
+    
+    # Get recent safety observations
+    try:
+        recent_observations = SafetyObservation.query.filter_by(project_id=project_id)\
+            .order_by(SafetyObservation.observation_date.desc()).limit(5).all()
+    except:
+        recent_observations = []
+    
+    # Get recent incidents
+    try:
+        recent_incidents = IncidentReport.query.filter_by(project_id=project_id)\
+            .order_by(IncidentReport.incident_date.desc()).limit(5).all()
+    except:
+        recent_incidents = []
+    
+    return render_template('projects/safety/dashboard.html',
+                          project=project,
+                          observations_count=observations_count,
+                          incidents_count=incidents_count,
+                          jha_count=jha_count,
+                          recent_observations=recent_observations,
+                          recent_incidents=recent_incidents)
+
 
 @safety_bp.route('/dashboard')
 @login_required
@@ -101,13 +149,15 @@ def dashboard():
                           recordables_data=recordables_data,
                           manhours_data=manhours_data)
 
-# Safety Observations routes
-@safety_bp.route('/observations')
+@safety_bp.route('/<int:project_id>/observations')
 @login_required
-@project_access_required
-def observations():
+def observations(project_id):
     """List all safety observations"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+    
     project = Project.query.get_or_404(project_id)
     
     # Apply filters if provided
@@ -115,18 +165,21 @@ def observations():
     category_filter = request.args.get('category', 'all')
     severity_filter = request.args.get('severity', 'all')
     
-    query = SafetyObservation.query.filter_by(project_id=project_id)
-    
-    if status_filter != 'all':
-        query = query.filter_by(status=status_filter)
-    
-    if category_filter != 'all':
-        query = query.filter_by(category=category_filter)
-    
-    if severity_filter != 'all':
-        query = query.filter_by(severity=severity_filter)
-    
-    observations = query.order_by(SafetyObservation.observation_date.desc()).all()
+    try:
+        query = SafetyObservation.query.filter_by(project_id=project_id)
+        
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        if category_filter != 'all':
+            query = query.filter_by(category=category_filter)
+        
+        if severity_filter != 'all':
+            query = query.filter_by(severity=severity_filter)
+        
+        observations = query.order_by(SafetyObservation.observation_date.desc()).all()
+    except:
+        observations = []
     
     return render_template('projects/safety/observations/list.html',
                           project=project, observations=observations)
@@ -283,28 +336,33 @@ def update_observation_status(observation_id):
     return redirect(url_for('projects.safety.view_observation', 
                           project_id=project_id, observation_id=observation_id))
 
-# Incident Reports routes
-@safety_bp.route('/incidents')
+@safety_bp.route('/<int:project_id>/incidents')
 @login_required
-@project_access_required
-def incidents():
+def incidents(project_id):
     """List all incident reports"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+    
     project = Project.query.get_or_404(project_id)
     
     # Apply filters if provided
     type_filter = request.args.get('type', 'all')
     severity_filter = request.args.get('severity', 'all')
     
-    query = IncidentReport.query.filter_by(project_id=project_id)
-    
-    if type_filter != 'all':
-        query = query.filter_by(incident_type=type_filter)
-    
-    if severity_filter != 'all':
-        query = query.filter_by(severity=severity_filter)
-    
-    incidents = query.order_by(IncidentReport.incident_date.desc()).all()
+    try:
+        query = IncidentReport.query.filter_by(project_id=project_id)
+        
+        if type_filter != 'all':
+            query = query.filter_by(incident_type=type_filter)
+        
+        if severity_filter != 'all':
+            query = query.filter_by(severity=severity_filter)
+        
+        incidents = query.order_by(IncidentReport.incident_date.desc()).all()
+    except:
+        incidents = []
     
     return render_template('projects/safety/incidents/list.html',
                           project=project, incidents=incidents)
@@ -391,17 +449,22 @@ def view_incident(incident_id):
     return render_template('projects/safety/incidents/view.html',
                           project=project, incident=incident, photos=photos)
 
-# JHA routes
-@safety_bp.route('/jha')
+@safety_bp.route('/<int:project_id>/jha')
 @login_required
-@project_access_required
-def jha_list():
+def jha_list(project_id):
     """List all Job Hazard Analyses"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+    
     project = Project.query.get_or_404(project_id)
     
-    jhas = JobHazardAnalysis.query.filter_by(project_id=project_id).order_by(
-        JobHazardAnalysis.created_date.desc()).all()
+    try:
+        jhas = JobHazardAnalysis.query.filter_by(project_id=project_id).order_by(
+            JobHazardAnalysis.created_at.desc()).all()
+    except:
+        jhas = []
     
     return render_template('projects/safety/jha/list.html',
                           project=project, jhas=jhas)
@@ -698,33 +761,47 @@ def view_orientation(orientation_id):
                           project=project, orientation=orientation, 
                           attendees=attendees, photos=photos)
 
-# Safety Metrics routes
-@safety_bp.route('/metrics')
+@safety_bp.route('/<int:project_id>/metrics')
 @login_required
-@project_access_required
-def metrics():
+def metrics(project_id):
     """View safety metrics"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+    
     project = Project.query.get_or_404(project_id)
     
-    metrics = SafetyMetrics.query.filter_by(project_id=project_id).order_by(
-        SafetyMetrics.date.desc()).all()
+    try:
+        safety_metrics = SafetyMetrics.query.filter_by(project_id=project_id).order_by(
+            SafetyMetrics.date.desc()).all()
+    except:
+        safety_metrics = []
     
     # Calculate overall metrics
-    total_hours = sum(metric.man_hours for metric in metrics) if metrics else 0
-    total_recordables = sum(metric.recordable_incidents for metric in metrics) if metrics else 0
-    total_lost_time = sum(metric.lost_time_incidents for metric in metrics) if metrics else 0
+    total_hours = 0
+    total_recordables = 0
+    total_lost_time = 0
+    
+    try:
+        for metric in safety_metrics:
+            total_hours += metric.man_hours
+            total_recordables += metric.recordable_incidents
+            total_lost_time += metric.lost_time_incidents
+    except:
+        pass
     
     trir = (total_recordables * 200000) / total_hours if total_hours > 0 else 0
     ltir = (total_lost_time * 200000) / total_hours if total_hours > 0 else 0
     
-    return render_template('projects/safety/metrics.html',
-                          project=project, metrics=metrics, 
-                          trir=trir, ltir=ltir,
+    return render_template('projects/safety/metrics/index.html',
+                          project=project, 
+                          safety_metrics=safety_metrics, 
+                          trir=trir, 
+                          ltir=ltir,
                           total_hours=total_hours,
                           total_recordables=total_recordables,
                           total_lost_time=total_lost_time)
-
 @safety_bp.route('/metrics/create', methods=['GET', 'POST'])
 @login_required
 @project_access_required
@@ -758,4 +835,20 @@ def create_metrics():
             lost_time_incidents=form.lost_time_incidents.data,
             near_misses=form.near_misses.data,
             first_aid_cases=form.first_aid_cases.data,
-            property_damage_incidents=form.
+            property_damage_incidents=form.property_damage_incidents.data,
+            safety_observations=form.safety_observations.data,
+            safety_inspections=form.safety_inspections.data,
+            toolbox_talks=form.toolbox_talks.data,
+            created_by=current_user.id
+        )
+        
+        db.session.add(metrics)
+        db.session.commit()
+        
+        flash('Safety metrics have been created successfully!', 'success')
+        return redirect(url_for('projects.safety.view_metrics', project_id=project_id))
+    
+    return render_template('projects/safety/metrics_form.html', 
+                          title='Create Safety Metrics',
+                          form=form,
+                          project=project)

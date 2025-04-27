@@ -1,3 +1,5 @@
+# app/models/field.py
+
 from app.extensions import db
 from datetime import datetime
 from sqlalchemy.sql import func
@@ -30,7 +32,7 @@ class DailyReport(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     report_number = db.Column(db.String(50))
     report_date = db.Column(db.Date, default=datetime.utcnow().date)
-    
+    manpower_entries = db.relationship('ManpowerEntry', back_populates='daily_report', lazy='dynamic')
     # Weather information
     weather_condition = db.Column(db.String(20))
     temperature_low = db.Column(db.Float)
@@ -68,16 +70,15 @@ class DailyReport(db.Model):
     # Relationships
     project = db.relationship('Project', backref=db.backref('daily_reports', lazy='dynamic'))
     author = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='daily_report',
-                              primaryjoin="and_(Comment.record_type=='daily_report', "
-                                         "Comment.record_id==DailyReport.id)")
-    attachments = db.relationship('Attachment', backref='daily_report',
-                                 primaryjoin="and_(Attachment.record_type=='daily_report', "
-                                            "Attachment.record_id==DailyReport.id)")
+    
     photos = db.relationship('ProjectPhoto', backref='daily_report', lazy='dynamic')
     labor_entries = db.relationship('LaborEntry', backref='daily_report', lazy='dynamic')
     equipment_entries = db.relationship('EquipmentEntry', backref='daily_report', lazy='dynamic')
-    
+    project = db.relationship('Project', backref=db.backref('daily_reports', lazy='dynamic'))
+    author = db.relationship('User', foreign_keys=[created_by])
+    photos = db.relationship('ProjectPhoto', backref='daily_report', lazy='dynamic')
+    labor_entries = db.relationship('LaborEntry', backref='daily_report', lazy='dynamic')
+    equipment_entries = db.relationship('EquipmentEntry', backref='daily_report', lazy='dynamic')
     def __repr__(self):
         return f'<DailyReport {self.report_number} - {self.report_date}>'
 
@@ -106,7 +107,6 @@ class EquipmentEntry(db.Model):
     
     def __repr__(self):
         return f'<EquipmentEntry {self.equipment_type} - {self.count} units>'
-
 class ProjectPhoto(db.Model):
     __tablename__ = 'project_photos'
     
@@ -125,8 +125,10 @@ class ProjectPhoto(db.Model):
     uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
-    project = db.relationship('Project', backref=db.backref('photos', lazy='dynamic'))
+    project = db.relationship('Project', backref=db.backref('project_photos', lazy='dynamic'))
     uploader = db.relationship('User', foreign_keys=[uploaded_by])
+    
+   
     
     def __repr__(self):
         return f'<ProjectPhoto {self.id} - {self.title}>'
@@ -158,12 +160,7 @@ class SafetyIncident(db.Model):
     project = db.relationship('Project', backref=db.backref('safety_incidents', lazy='dynamic'))
     reporter = db.relationship('User', foreign_keys=[reported_by])
     reviewer = db.relationship('User', foreign_keys=[reviewed_by])
-    comments = db.relationship('Comment', backref='safety_incident',
-                              primaryjoin="and_(Comment.record_type=='safety_incident', "
-                                         "Comment.record_id==SafetyIncident.id)")
-    attachments = db.relationship('Attachment', backref='safety_incident',
-                                 primaryjoin="and_(Attachment.record_type=='safety_incident', "
-                                            "Attachment.record_id==SafetyIncident.id)")
+    
     
     def __repr__(self):
         return f'<SafetyIncident {self.id} - {self.title}>'
@@ -192,21 +189,6 @@ class DailyReportPhoto(db.Model):
         return url_for('static', filename=f'uploads/{self.file_path}')
 
 
-class ManpowerEntry(db.Model):
-    """Manpower entries for daily reports"""
-    __tablename__ = 'manpower_entries'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    report_id = db.Column(db.Integer, db.ForeignKey('daily_reports.id'), nullable=False)
-    company_name = db.Column(db.String(100), nullable=False)
-    trade = db.Column(db.String(100))
-    personnel_count = db.Column(db.Integer, default=0)
-    hours_worked = db.Column(db.Float, default=0)
-    work_description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=func.now())
-    
-    def __repr__(self):
-        return f"<ManpowerEntry {self.company_name}>"
 
 
 class WorkActivity(db.Model):
@@ -398,7 +380,7 @@ class Schedule(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
-    project = db.relationship('Project', backref='schedules')
+    project = db.relationship('Project', backref='field_schedules')
     creator = db.relationship('User', foreign_keys=[created_by])
 
 class PullPlan(db.Model):
@@ -461,8 +443,8 @@ class FieldPhoto(db.Model):
     uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     # Relationships
-    project = db.relationship('Project', backref='photos')
-    daily_report = db.relationship('DailyReport', back_populates='photos')
+    project = db.relationship('Project', backref='field_photos')
+    daily_report = db.relationship('DailyReport', backref='field_photos')
     uploader = db.relationship('User', foreign_keys=[uploaded_by])
     
     def __repr__(self):
@@ -514,9 +496,6 @@ class FieldInspection(db.Model):
     # Relationships
     project = db.relationship('Project', backref='inspections')
     creator = db.relationship('User', foreign_keys=[created_by])
-    attachments = db.relationship('Attachment', backref='inspection',
-                                primaryjoin="and_(Attachment.record_type=='field_inspection', "
-                                           "Attachment.record_id==FieldInspection.id)")
-    
+   
     def __repr__(self):
         return f'<FieldInspection {self.inspection_type} - {self.inspection_date}>'

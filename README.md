@@ -61,12 +61,19 @@ construction-dashboard/
 │   │   └── handlers.py             # Error handling routes
 │   ├── models/                     # Database models
 │   │   ├── __init__.py
+│   │   ├── base.py                 # Base models (Comment, Attachment)
 │   │   ├── user.py                 # User model
 │   │   ├── project.py              # Project model
+│   │   ├── document.py             # Document model
 │   │   ├── engineering.py          # Engineering models (RFI, Submittal)
 │   │   ├── field.py                # Field models (DailyReport)
 │   │   ├── safety.py               # Safety models
-│   │   └── cost.py                 # Cost models (Budget, ChangeOrder)
+│   │   ├── cost.py                 # Cost models (Budget, ChangeOrder)
+│   │   ├── contracts.py            # Contract models
+│   │   ├── closeout.py             # Closeout models
+│   │   ├── bim.py                  # BIM models
+│   │   ├── preconstruction.py      # Preconstruction models
+│   │   └── settings.py             # Settings models
 │   ├── web3/                       # Blockchain integration
 │   │   ├── __init__.py
 │   │   └── contracts.py            # Smart contract interfaces
@@ -156,7 +163,7 @@ construction-dashboard/
 
 7. Run the development server:
    ```
-   flask run
+   python run.py run
    ```
 
 8. Access the application at http://localhost:5000
@@ -223,6 +230,30 @@ See .env.example for a complete list of configuration options.
 
 ## Development
 
+### Database Model Relationships
+
+This application uses SQLAlchemy ORM with a complex set of relationships between models. When developing, keep these guidelines in mind:
+
+1. **Naming Conventions**: 
+   - Use unique backref names when multiple models reference the same parent model
+   - Prefix backrefs with the module or model name (e.g., `field_photos`, `project_photos`)
+
+2. **Circular References**:
+   - Use string-based model references in relationships to avoid circular import issues
+   - Import models inside methods when using them for query methods
+
+3. **Polymorphic Relationships**:
+   - When using polymorphic relationships (like with `Comment` and `Attachment`), use query methods instead of complex join conditions
+   - For example: `def get_comments(self): return Comment.query.filter_by(module_name='rfi', record_id=self.id).all()`
+
+4. **Consistent Relationship Styles**:
+   - Choose either `backref` or `back_populates` consistently throughout your models
+   - When using `back_populates`, ensure both sides of the relationship are defined with matching property names
+
+5. **Complex Join Conditions**:
+   - Use `foreign()` annotation in complex join conditions to explicitly mark foreign keys
+   - For example: `primaryjoin="and_(Comment.module_name=='rfi', foreign(Comment.record_id)==RFI.id)"`
+
 ### Testing
 
 Run the test suite:
@@ -264,6 +295,10 @@ flask user deactivate <email>
 # Database management
 flask db-manage seed  # Seed database with initial data
 
+# Database Upgrade 
+python run.py db migrate -m "Message"
+python run.py db upgrade
+
 # Setup commands
 flask setup directories  # Create required directories
 
@@ -301,6 +336,20 @@ Access monitoring data at `/admin/monitoring` (admin users only).
 - Content Security Policy headers
 - IP allowlist for admin functions
 - HTTPS enforcement in production
+
+## Troubleshooting
+
+### Common Database Relationship Issues
+
+1. **Duplicate backref names**: If you see errors like `Error creating backref 'photos' on relationship...`, you need to rename one of the backrefs to make it unique.
+
+2. **Missing models**: Errors like `expression 'Document' failed to locate a name` indicate a missing model. Create the model or ensure it's properly imported.
+
+3. **Foreign key issues**: Errors like `Could not locate any relevant foreign key columns for primary join condition` suggest you need to explicitly mark foreign keys in relationships using the `foreign()` annotation or define foreign keys correctly.
+
+4. **Circular imports**: These can cause models to be undefined during initialization. Use string-based model references and/or defer imports until runtime.
+
+5. **Property conflicts**: Warnings about relationships copying columns to the same target indicate overlapping relationships. Use `viewonly=True` or specify `overlaps` parameter.
 
 ## Contributing
 

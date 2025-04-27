@@ -1,0 +1,281 @@
+{% extends "layout.html" %}
+
+{% block title %}Submittal #{{ submittal.number }} - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ project.name }}</h1>
+            <p class="text-muted">{{ project.number }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('engineering.submittals', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Submittals
+            </a>
+        </div>
+    </div>
+    
+    <!-- Project Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_overview.index', project_id=project.id) }}">
+                                <i class="fas fa-home"></i> Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-drafting-compass"></i> Engineering
+                            </a>
+                        </li>
+                        <!-- Add more module links here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Engineering Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('engineering.dashboard', project_id=project.id) }}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-question-circle"></i> RFIs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('engineering.submittals', project_id=project.id) }}">
+                                <i class="fas fa-file-alt"></i> Submittals
+                            </a>
+                        </li>
+                        <!-- Add more engineering tabs here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submittal Details -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <span class="badge bg-{{ 'warning' if submittal.status == 'pending' else 'info' if submittal.status == 'under_review' else 'success' if submittal.status == 'approved' else 'primary' if submittal.status == 'approved_with_comments' else 'secondary' if submittal.status == 'revise_and_resubmit' else 'danger' }} me-2">
+                    {{ submittal.status|replace('_', ' ')|title }}
+                </span>
+                Submittal #{{ submittal.number }}
+            </h5>
+            <div>
+                <a href="{{ url_for('engineering.edit_submittal', id=submittal.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a href="{{ url_for('engineering.submittal_pdf', id=submittal.id) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteSubmittalModal">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Title:</strong> {{ submittal.title }}</p>
+                    <p><strong>Specification Section:</strong> {{ submittal.specification_section or 'Not specified' }}</p>
+                    <p><strong>Submitted by:</strong> {{ submittal.submitter.name if submittal.submitter else 'Unknown' }}</p>
+                    <p><strong>Date submitted:</strong> {{ submittal.date_submitted.strftime('%Y-%m-%d') if submittal.date_submitted else 'N/A' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Status:</strong> {{ submittal.status|replace('_', ' ')|title }}</p>
+                    <p><strong>Response required by:</strong> {{ submittal.date_required.strftime('%Y-%m-%d') if submittal.date_required else 'Not specified' }}</p>
+                    <p><strong>Date returned:</strong> {{ submittal.date_returned.strftime('%Y-%m-%d') if submittal.date_returned else 'Not returned yet' }}</p>
+                    <p><strong>Reviewed by:</strong> {{ submittal.reviewer.name if submittal.reviewer else 'Not reviewed yet' }}</p>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h6 class="fw-bold">Description:</h6>
+                <div class="p-3 bg-light rounded mb-4">
+                    {{ submittal.description|nl2br or 'No description provided.' }}
+                </div>
+                
+                {% if submittal.review_comments %}
+                <h6 class="fw-bold">Review Comments:</h6>
+                <div class="p-3 bg-light rounded">
+                    {{ submittal.review_comments|nl2br }}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No review comments have been added yet.
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if submittal.status == 'pending' %}
+            <div class="mt-4">
+                <h6 class="fw-bold">Review Actions:</h6>
+                <form method="POST" action="{{ url_for('engineering.review_submittal', id=submittal.id) }}">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group mb-3">
+                                <label for="status" class="form-label">Review Decision</label>
+                                <select name="status" id="status" class="form-select" required>
+                                    <option value="">Select decision</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="approved_with_comments">Approved with Comments</option>
+                                    <option value="revise_and_resubmit">Revise and Resubmit</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group mb-3">
+                                <label for="review_comments" class="form-label">Review Comments</label>
+                                <textarea name="review_comments" id="review_comments" rows="3" class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Attachments -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Attachments</h5>
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addAttachmentModal">
+                <i class="fas fa-plus"></i> Add Attachment
+            </button>
+        </div>
+        <div class="card-body">
+            {% if attachments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded by</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attachment in attachments %}
+                        <tr>
+                            <td>{{ attachment.filename }}</td>
+                            <td>{{ attachment.file_type }}</td>
+                            <td>{{ (attachment.file_size / 1024)|round(1) }} KB</td>
+                            <td>{{ attachment.uploader.name if attachment.uploader else 'Unknown' }}</td>
+                            <td>
+                                <a href="{{ url_for('static', filename='uploads/' + attachment.file_path) }}" class="btn btn-sm btn-outline-primary" download>
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No attachments have been added to this submittal.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Comments -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Comments</h5>
+        </div>
+        <div class="card-body">
+            {% if comments %}
+            <div class="comment-list">
+                {% for comment in comments %}
+                <div class="comment mb-3 p-3 border rounded">
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">{{ comment.user.name if comment.user else 'Unknown' }}</div>
+                        <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                    <div class="mt-2">{{ comment.content|nl2br }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No comments have been added to this submittal.</p>
+            {% endif %}
+            
+            <!-- Add Comment Form -->
+            <form method="POST" action="{{ url_for('engineering.add_submittal_comment', id=submittal.id) }}" class="mt-4">
+                <div class="form-group">
+                    <label for="content" class="form-label">Add a comment:</label>
+                    <textarea name="content" id="content" class="form-control" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">
+                    <i class="fas fa-comment"></i> Add Comment
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Delete Modal -->
+    <div class="modal fade" id="deleteSubmittalModal" tabindex="-1" aria-labelledby="deleteSubmittalModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteSubmittalModalLabel">Confirm Delete</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete Submittal #{{ submittal.number }} - "{{ submittal.title }}"? This action cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="POST" action="{{ url_for('engineering.delete_submittal', id=submittal.id) }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Attachment Modal -->
+    <div class="modal fade" id="addAttachmentModal" tabindex="-1" aria-labelledby="addAttachmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAttachmentModalLabel">Add Attachment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="{{ url_for('engineering.add_submittal_attachment', id=submittal.id) }}" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="file" class="form-label">Select file:</label>
+                            <input type="file" name="file" id="file" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

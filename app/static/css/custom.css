@@ -62,3 +62,48 @@ body {
 .text-muted {
     color: #6c757d !important;
 }
+/* app/static/css/custom.css */
+
+/* Timeline styles */
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-marker {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    left: -30px;
+    top: 6px;
+    border-radius: 50%;
+}
+
+.timeline-item:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: -23px;
+    top: 21px;
+    height: calc(100% - 21px);
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline-title {
+    margin-bottom: 0.25rem;
+    font-weight: bold;
+}
+
+.timeline-date {
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}

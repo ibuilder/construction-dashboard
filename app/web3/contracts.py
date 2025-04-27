@@ -8,7 +8,7 @@ class ContractManager:
     def get_project(self, project_id):
         return self.contract.functions.getProject(project_id).call()
 
-    def create_project(self, name, description, account):
+    def (self, name, description, account):
         tx_hash = self.contract.functions.createProject(name, description).transact({'from': account})
         return self.web3.eth.waitForTransactionReceipt(tx_hash)
 

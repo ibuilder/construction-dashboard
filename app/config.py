@@ -1,3 +1,4 @@
+# app/config.py
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
@@ -9,6 +10,11 @@ class Config:
     """Base configuration"""
     # Load from environment or use default
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key'
+    
+    # Session security settings
+    SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to cookies
+    PERMANENT_SESSION_LIFETIME = timedelta(days=1)  # Limit session lifetime
+    SESSION_COOKIE_SECURE = os.environ.get('SECURE_COOKIES', 'False').lower() == 'true'
     
     # Database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
@@ -230,7 +236,3 @@ class ProductionConfig(Config):
         'pool_pre_ping': True,  # Enable connection verification before use
     }
 
-# Flask app configuration
-app.config['SESSION_COOKIE_SECURE'] = True  # Only send cookies over HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JavaScript access to cookies
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Limit session lifetime

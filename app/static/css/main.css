@@ -1,0 +1,181 @@
+
+/* Main CSS for Construction Management Dashboard */
+
+/* Base structure */
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8f9fa;
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    min-height: calc(100vh - 60px); /* Subtract footer height */
+}
+
+/* Sidebar Styles */
+.sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: #343a40;
+    color: #fff;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.sidebar .sidebar-header {
+    padding: 20px;
+    background: #2c3136;
+}
+
+.sidebar ul.components {
+    padding: 20px 0;
+    border-bottom: 1px solid #4a5056;
+    flex-grow: 1;
+}
+
+.sidebar ul li a {
+    padding: 10px 20px;
+    display: block;
+    color: #f8f9fa;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.sidebar ul li a:hover {
+    color: #343a40;
+    background: #f8f9fa;
+}
+
+.sidebar ul li.active > a {
+    color: #fff;
+    background: #007bff;
+}
+
+.sidebar ul ul a {
+    padding-left: 30px;
+    background: #2c3136;
+}
+
+.sidebar-heading {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #adb5bd;
+    font-weight: bold;
+    padding: 15px 20px 5px 20px;
+}
+
+.sidebar a[data-toggle="collapse"] {
+    position: relative;
+}
+
+.sidebar a[aria-expanded="true"] {
+    background: #2c3136;
+}
+
+.sidebar.active {
+    margin-left: -250px;
+}
+
+/* Main Content */
+.content {
+    width: 100%;
+    padding: 0;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Card styles */
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-primary {
+    color: #007bff;
+    border-color: #007bff;
+}
+
+/* Stat cards */
+.stat-card {
+    border-radius: 0.25rem;
+    border: none;
+    transition: transform 0.3s ease-in-out;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Table styles */
+.table thead th {
+    border-top: none;
+    border-bottom-width: 1px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Footer */
+.footer {
+    background: #f8f9fa;
+    height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+/* Status badges */
+.badge-planning {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-on-hold {
+    background-color: #ffc107;
+    color: black;
+}
+
+.badge-completed {
+    background-color: #6c757d;
+    color: white;
+}
+
+.badge-cancelled {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* Responsive sidebar toggling */
+@media (max-width: 768px) {
+    .sidebar {
+        margin-left: -250px;
+    }
+    .sidebar.active {
+        margin-left: 0;
+    }
+}

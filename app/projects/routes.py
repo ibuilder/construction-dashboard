@@ -1,3 +1,5 @@
+# app/projects/routes.py
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, abort, send_file, jsonify
 from flask_login import login_required, current_user
 from app.projects.forms import ProjectForm, ProjectFilterForm, ProjectNoteForm
@@ -45,7 +47,11 @@ def index():
                 Project.name.ilike(search_term),
                 Project.description.ilike(search_term)
             ))
-    
+    permission = {
+        'CREATE': Role.PERMISSION['CREATE'],
+        'EDIT': Role.PERMISSION['EDIT'],
+        'DELETE': Role.PERMISSION['DELETE']
+    }
     # Apply sorting
     sort_by = request.args.get('sort_by', 'start_date')
     sort_dir = request.args.get('sort_dir', 'desc')
@@ -64,7 +70,7 @@ def index():
                           projects=projects, 
                           form=form,
                           sort_by=sort_by,
-                          sort_dir=sort_dir)
+                          sort_dir=sort_dir, permission = permission)
 
 @projects_bp.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -72,20 +78,37 @@ def index():
 def create():
     """Create a new project"""
     form = ProjectForm()
-    form.client_id.choices = [(c.id, c.name) for c in Client.query.order_by(Client.name).all()]
-    form.client_id.choices.insert(0, (0, 'Select Client'))
+    
+    # Debug form submission
+    current_app.logger.info(f"Form submitted: {request.method}")
     
     if form.validate_on_submit():
+        current_app.logger.info("Form validated successfully")
         try:
+            # Debug form data
+            current_app.logger.info(f"Form data - Name: {form.name.data}, Number: {form.number.data}")
+            current_app.logger.info(f"Form data - Start date: {form.start_date.data}")
+            
             # Create new project
             project = Project()
             form.populate_obj(project)
             
-            if form.client_id.data == 0:
-                project.client_id = None
-                
+            current_app.logger.info(f"Project object created with name: {project.name}, number: {project.number}")
+            
+            # Add client mapping if needed
+            if form.client_name.data:
+                current_app.logger.info(f"Looking up client: {form.client_name.data}")
+                client = Client.query.filter_by(name=form.client_name.data).first()
+                if client:
+                    project.client_id = client.id
+                    current_app.logger.info(f"Client found with ID: {client.id}")
+                else:
+                    current_app.logger.info("Client not found, using client_name directly")
+            
+            current_app.logger.info("Adding project to database session")
             db.session.add(project)
             db.session.flush()
+            current_app.logger.info(f"Project flushed to DB with ID: {project.id}")
             
             # Add current user as project manager
             project_manager = ProjectTeamMember(
@@ -95,7 +118,10 @@ def create():
                 is_active=True,
                 added_by=current_user.id
             )
+            current_app.logger.info(f"Creating team member with user ID: {current_user.id}")
             db.session.add(project_manager)
+            
+            current_app.logger.info("Committing transaction")
             db.session.commit()
             
             flash('Project created successfully!', 'success')
@@ -103,7 +129,15 @@ def create():
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating project: {str(e)}")
-            flash('An error occurred while creating the project.', 'danger')
+            current_app.logger.error(f"Exception type: {type(e).__name__}")
+            import traceback
+            current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+            flash(f'An error occurred while creating the project: {str(e)}', 'danger')
+    else:
+        if request.method == 'POST':
+            current_app.logger.warning("Form validation failed")
+            for field, errors in form.errors.items():
+                current_app.logger.warning(f"Field {field} errors: {errors}")
     
     return render_template('projects/create.html', form=form)
 
@@ -116,7 +150,7 @@ def view(project_id):
         flash("You don't have access to this project.", "danger")
         return redirect(url_for('projects.index'))
         
-    return redirect(url_for('projects.overview.index', project_id=project_id))
+    return redirect(url_for('projects_overview.index', project_id=project_id))
 
 @projects_bp.route('/<int:project_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -210,17 +244,20 @@ def api_projects():
     results = [{'id': p.id, 'text': p.name} for p in projects]
     return jsonify({'results': results})
 
-@app.route('/health/liveness')
-def liveness():
-    return jsonify({'status': 'ok'}), 200
-    
-@app.route('/health/readiness')
-def readiness():
-    # Check dependencies are ready
-    database_ok = check_db_connection()
-    cache_ok = check_cache_connection()
-    return jsonify({
-        'status': 'ok' if database_ok and cache_ok else 'degraded',
-        'database': database_ok,
-        'cache': cache_ok
-    }), 200 if database_ok and cache_ok else 503
+# Health check endpoints (moved to app-level routes)
+# Note: These should be defined at the application level, not the blueprint level
+def check_db_connection():
+    """Check if database connection is working"""
+    try:
+        db.session.execute('SELECT 1')
+        return True
+    except Exception:
+        return False
+
+def check_cache_connection():
+    """Check if cache connection is working"""
+    try:
+        cache.set('health_check', 'ok')
+        return cache.get('health_check') == 'ok'
+    except Exception:
+        return False

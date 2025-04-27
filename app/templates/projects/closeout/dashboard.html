@@ -1,232 +1,162 @@
-{% extends 'layout.html' %}
+<!-- app/templates/projects/closeout/dashboard.html -->
+{% extends "layout.html" %}
 
-{% block title %}Closeout Dashboard - {{ project.name }}{% endblock %}
+{% block title %}{{ project.name }} - Closeout Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Heading -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Project Closeout</h1>
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <div class="dropdown d-inline-block">
-                <button class="btn btn-primary dropdown-toggle" type="button" id="addNewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-plus-circle"></i> Add New
-                </button>
-                <ul class="dropdown-menu" aria-labelledby="addNewDropdown">
-                    <li><a class="dropdown-item" href="{{ url_for('projects.closeout.create_manual', project_id=project.id) }}">O&M Manual</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('projects.closeout.create_warranty', project_id=project.id) }}">Warranty</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('projects.closeout.create_attic_stock', project_id=project.id) }}">Attic Stock</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="{{ url_for('projects.closeout.create_inspection', project_id=project.id) }}">Final Inspection</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('projects.closeout.create_asbuilt', project_id=project.id) }}">As-Built Drawing</a></li>
-                    <li><a class="dropdown-item" href="{{ url_for('projects.closeout.create_document', project_id=project.id) }}">Closeout Document</a></li>
-                </ul>
-            </div>
+            <h1 class="h3 mb-0">Project Closeout</h1>
+            <p class="text-muted">{{ project.name }} ({{ project.number }})</p>
         </div>
-    </div>
-
-    <!-- Content Row - Document Counts -->
-    <div class="row">
-        <!-- O&M Manuals Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                O&M Manuals</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ manual_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-book fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.closeout.manuals', project_id=project.id) }}" class="text-primary">View All</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Warranties Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Warranties</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ warranty_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-shield-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.closeout.warranties', project_id=project.id) }}" class="text-success">View All</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Attic Stock Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Attic Stock</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ attic_stock_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-box fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.closeout.attic_stock', project_id=project.id) }}" class="text-info">View All</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Final Inspections Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Final Inspections</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ inspection_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-clipboard-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.closeout.inspections', project_id=project.id) }}" class="text-warning">View All</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- As-Built Drawings Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-danger shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
-                                As-Built Drawings</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ asbuilt_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-file-earmark-ruled fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.closeout.asbuilts', project_id=project.id) }}" class="text-danger">View All</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Closeout Documents Card -->
-        <div class="col-xl-4 col-md-6 mb-4">
-            <div class="card border-left-secondary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
-                                Closeout Documents</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ document_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-file-earmark-text fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.closeout.documents', project_id=project.id) }}" class="text-secondary">View All</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Expiring Warranties Card -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Warranties Expiring Soon (Next 30 Days)</h6>
-            <a href="{{ url_for('projects.closeout.warranties', project_id=project.id) }}" class="btn btn-sm btn-primary">
-                View All Warranties
+        <div>
+            <a href="{{ url_for('projects_overview.index', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Overview
             </a>
         </div>
+    </div>
+    
+    <!-- Closeout Categories -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-inline-block p-3 mb-3 rounded-circle bg-primary">
+                        <i class="fas fa-book fa-2x text-white"></i>
+                    </div>
+                    <h2 class="display-4">{{ manual_count }}</h2>
+                    <h5 class="card-title">O&M Manuals</h5>
+                    <p class="card-text">Operation and maintenance documentation</p>
+                    <a href="{{ url_for('projects_closeout.manuals', project_id=project.id) }}" class="btn btn-primary">View Manuals</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-inline-block p-3 mb-3 rounded-circle bg-success">
+                        <i class="fas fa-certificate fa-2x text-white"></i>
+                    </div>
+                    <h2 class="display-4">{{ warranty_count }}</h2>
+                    <h5 class="card-title">Warranties</h5>
+                    <p class="card-text">Product and system warranties</p>
+                    <a href="{{ url_for('projects_closeout.warranties', project_id=project.id) }}" class="btn btn-success">View Warranties</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-inline-block p-3 mb-3 rounded-circle bg-warning">
+                        <i class="fas fa-boxes fa-2x text-white"></i>
+                    </div>
+                    <h2 class="display-4">{{ attic_stock_count }}</h2>
+                    <h5 class="card-title">Attic Stock</h5>
+                    <p class="card-text">Extra materials for future maintenance</p>
+                    <a href="{{ url_for('projects_closeout.attic_stock', project_id=project.id) }}" class="btn btn-warning">View Attic Stock</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-inline-block p-3 mb-3 rounded-circle bg-danger">
+                        <i class="fas fa-clipboard-check fa-2x text-white"></i>
+                    </div>
+                    <h2 class="display-4">{{ inspection_count }}</h2>
+                    <h5 class="card-title">Final Inspections</h5>
+                    <p class="card-text">Regulatory and compliance inspections</p>
+                    <a href="{{ url_for('projects_closeout.inspections', project_id=project.id) }}" class="btn btn-danger">View Inspections</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-inline-block p-3 mb-3 rounded-circle bg-info">
+                        <i class="fas fa-drafting-compass fa-2x text-white"></i>
+                    </div>
+                    <h2 class="display-4">{{ asbuilt_count }}</h2>
+                    <h5 class="card-title">As-Built Drawings</h5>
+                    <p class="card-text">Final construction documents</p>
+                    <a href="{{ url_for('projects_closeout.as_builts', project_id=project.id) }}" class="btn btn-info">View As-Builts</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <div class="d-inline-block p-3 mb-3 rounded-circle bg-secondary">
+                        <i class="fas fa-file-alt fa-2x text-white"></i>
+                    </div>
+                    <h2 class="display-4">{{ document_count }}</h2>
+                    <h5 class="card-title">Closeout Documents</h5>
+                    <p class="card-text">Certificates and legal documentation</p>
+                    <a href="{{ url_for('projects_closeout.documents', project_id=project.id) }}" class="btn btn-secondary">View Documents</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Expiring Warranties -->
+    {% if expiring_soon %}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Warranties Expiring Soon</h6>
+        </div>
         <div class="card-body">
-            {% if expiring_soon %}
             <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Title</th>
                             <th>Type</th>
-                            <th>Category</th>
                             <th>End Date</th>
                             <th>Days Left</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for warranty in expiring_soon %}
-                        {% set days_left = (warranty.end_date - today).days %}
                         <tr>
                             <td>{{ warranty.title }}</td>
-                            <td>{{ warranty.warranty_type|title }}</td>
-                            <td>{{ warranty.equipment_category or 'N/A' }}</td>
+                            <td>{{ warranty.warranty_type|replace('_', ' ')|title }}</td>
                             <td>{{ warranty.end_date.strftime('%m/%d/%Y') }}</td>
                             <td>
-                                <span class="badge bg-{% if days_left <= 7 %}danger{% elif days_left <= 14 %}warning{% else %}primary{% endif %}">
+                                {% set days_left = (warranty.end_date - today).days %}
+                                <span class="badge {% if days_left <= 7 %}bg-danger{% elif days_left <= 14 %}bg-warning{% else %}bg-info{% endif %}">
                                     {{ days_left }} days
                                 </span>
-                            </td>
-                            <td>
-                                <a href="{{ url_for('projects.closeout.view_warranty', project_id=project.id, warranty_id=warranty.id) }}" 
-                                   class="btn btn-sm btn-info">
-                                    <i class="bi bi-eye"></i> View
-                                </a>
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            {% else %}
-            <div class="text-center py-4">
-                <p class="text-muted mb-0">No warranties expiring in the next 30 days.</p>
-            </div>
-            {% endif %}
         </div>
     </div>
-
-    <!-- Recent Closeout Documents -->
+    {% endif %}
+    
+    <!-- Recent Documents -->
+    {% if recent_documents %}
     <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Recent Closeout Documents</h6>
-            <a href="{{ url_for('projects.closeout.documents', project_id=project.id) }}" class="btn btn-sm btn-primary">
-                View All Documents
-            </a>
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Recently Added Documents</h6>
         </div>
         <div class="card-body">
-            {% if recent_documents %}
             <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Title</th>
-                            <th>Document Type</th>
+                            <th>Type</th>
                             <th>Date Added</th>
-                            <th>Added By</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -235,24 +165,13 @@
                             <td>{{ doc.title }}</td>
                             <td>{{ doc.document_type|replace('_', ' ')|title }}</td>
                             <td>{{ doc.created_at.strftime('%m/%d/%Y') }}</td>
-                            <td>{{ doc.creator.full_name if doc.creator else 'Unknown' }}</td>
-                            <td>
-                                <a href="{{ url_for('projects.closeout.view_document', project_id=project.id, document_id=doc.id) }}" 
-                                   class="btn btn-sm btn-info">
-                                    <i class="bi bi-eye"></i> View
-                                </a>
-                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            {% else %}
-            <div class="text-center py-4">
-                <p class="text-muted mb-0">No closeout documents added yet.</p>
-            </div>
-            {% endif %}
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

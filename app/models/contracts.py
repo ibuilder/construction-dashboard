@@ -1,6 +1,9 @@
+# app/models/contracts.py
 from app.extensions import db
 from datetime import datetime
 from sqlalchemy import func
+from sqlalchemy.ext.declarative import declared_attr
+
 
 class ContractStatus:
     DRAFT = 'draft'
@@ -9,6 +12,30 @@ class ContractStatus:
     COMPLETE = 'complete'
     TERMINATED = 'terminated'
     EXPIRED = 'expired'
+
+
+class Contract(db.Model):
+    __tablename__ = 'contracts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    status = db.Column(db.String(20), default=ContractStatus.DRAFT)
+    contract_type = db.Column(db.String(50))  # To identify the type of contract: prime, subcontract, agreement
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    created_at = db.Column(db.DateTime, default=func.now())
+    updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
+    
+    # Relationships
+    project = db.relationship('Project', back_populates='contracts')
+    creator = db.relationship('User', foreign_keys=[created_by])
+    
+    # Polymorphic identity
+    __mapper_args__ = {
+        'polymorphic_on': contract_type,
+        'polymorphic_identity': 'contract'
+    }
 
 class ContractBase(db.Model):
     __abstract__ = True
@@ -22,8 +49,10 @@ class ContractBase(db.Model):
     created_at = db.Column(db.DateTime, default=func.now())
     updated_at = db.Column(db.DateTime, default=func.now(), onupdate=func.now())
     
-    # Common relationships
-    creator = db.relationship('User', foreign_keys=[created_by])
+    # Common relationships - use @declared_attr for relationships in abstract classes
+    @declared_attr
+    def creator(cls):
+        return db.relationship('User', foreign_keys=[cls.created_by])
     
     # Files and documents
     document_path = db.Column(db.String(255))
@@ -31,7 +60,7 @@ class ContractBase(db.Model):
 
 class PrimeContract(ContractBase):
     __tablename__ = 'prime_contracts'
-    
+    id = db.Column(db.Integer, db.ForeignKey('contracts.id'), primary_key=True)
     contract_number = db.Column(db.String(50), unique=True)
     contract_type = db.Column(db.String(50))  # lump sum, cost plus, etc.
     contract_value = db.Column(db.Float)
@@ -57,11 +86,21 @@ class PrimeContract(ContractBase):
     pending_changes = db.Column(db.Float, default=0.0)
     revised_value = db.Column(db.Float)
     
-    # Relationships
+    # Relationships - these are fine in concrete classes
     project = db.relationship('Project', backref=db.backref('prime_contracts', lazy='dynamic'))
-    change_orders = db.relationship('ContractChangeOrder', backref='prime_contract', lazy='dynamic',
-                                  primaryjoin="and_(ContractChangeOrder.contract_id==PrimeContract.id, "
-                                             "ContractChangeOrder.contract_type=='prime')")
+    change_orders = db.relationship(
+        'ContractChangeOrder',
+        primaryjoin="and_(ContractChangeOrder.contract_id==PrimeContract.id, "
+                   "ContractChangeOrder.contract_type=='prime')",
+        foreign_keys="[ContractChangeOrder.contract_id]",
+        viewonly=True  # Important to avoid conflicts with other relationships
+    )
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'prime'
+    }
+
+
     
     def __repr__(self):
         return f'<PrimeContract {self.id}: {self.title}>'
@@ -71,7 +110,7 @@ class PrimeContract(ContractBase):
 
 class Subcontract(ContractBase):
     __tablename__ = 'subcontracts'
-    
+    id = db.Column(db.Integer, db.ForeignKey('contracts.id'), primary_key=True)
     subcontract_number = db.Column(db.String(50), unique=True)
     subcontract_type = db.Column(db.String(50))  # lump sum, unit price, etc.
     subcontract_value = db.Column(db.Float)
@@ -107,10 +146,16 @@ class Subcontract(ContractBase):
     
     # Relationships
     project = db.relationship('Project', backref=db.backref('subcontracts', lazy='dynamic'))
-    change_orders = db.relationship('ContractChangeOrder', backref='subcontract', lazy='dynamic',
-                                  primaryjoin="and_(ContractChangeOrder.contract_id==Subcontract.id, "
-                                             "ContractChangeOrder.contract_type=='subcontract')")
-    
+    change_orders = db.relationship(
+            'ContractChangeOrder',
+            primaryjoin="and_(ContractChangeOrder.contract_id==Subcontract.id, "
+                    "ContractChangeOrder.contract_type=='subcontract')",
+            foreign_keys="[ContractChangeOrder.contract_id]",
+            viewonly=True
+        )
+    __mapper_args__ = {
+        'polymorphic_identity': 'subcontract'
+    }
     def __repr__(self):
         return f'<Subcontract {self.id}: {self.title}>'
     
@@ -119,7 +164,7 @@ class Subcontract(ContractBase):
 
 class ProfessionalServiceAgreement(ContractBase):
     __tablename__ = 'professional_service_agreements'
-    
+    id = db.Column(db.Integer, db.ForeignKey('contracts.id'), primary_key=True)
     agreement_number = db.Column(db.String(50), unique=True)
     agreement_type = db.Column(db.String(50))  # hourly, fixed fee, etc.
     agreement_value = db.Column(db.Float)
@@ -154,9 +199,16 @@ class ProfessionalServiceAgreement(ContractBase):
     
     # Relationships
     project = db.relationship('Project', backref=db.backref('professional_service_agreements', lazy='dynamic'))
-    change_orders = db.relationship('ContractChangeOrder', backref='agreement', lazy='dynamic',
-                                  primaryjoin="and_(ContractChangeOrder.contract_id==ProfessionalServiceAgreement.id, "
-                                             "ContractChangeOrder.contract_type=='agreement')")
+    change_orders = db.relationship(
+        'ContractChangeOrder',
+        primaryjoin="and_(ContractChangeOrder.contract_id==ProfessionalServiceAgreement.id, "
+                   "ContractChangeOrder.contract_type=='agreement')",
+        foreign_keys="[ContractChangeOrder.contract_id]",
+        viewonly=True
+    )
+    __mapper_args__ = {
+        'polymorphic_identity': 'agreement'
+    }
     
     def __repr__(self):
         return f'<ProfessionalServiceAgreement {self.id}: {self.title}>'
@@ -246,7 +298,7 @@ class ContractChangeOrder(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
-    contract_id = db.Column(db.Integer, nullable=False)
+    contract_id = db.Column(db.Integer, nullable=False)  # Not a direct foreign key
     contract_type = db.Column(db.String(20), nullable=False)  # 'prime', 'subcontract', 'agreement'
     change_order_number = db.Column(db.String(50))
     title = db.Column(db.String(100), nullable=False)
@@ -264,7 +316,7 @@ class ContractChangeOrder(db.Model):
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     # Relationships
-    project = db.relationship('Project', backref=db.backref('change_orders', lazy='dynamic'))
+    project = db.relationship('Project', backref=db.backref('contract_change_orders', lazy='dynamic'))
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_change_orders')
     approver = db.relationship('User', foreign_keys=[approved_by], backref='approved_change_orders')
     

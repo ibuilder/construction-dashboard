@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from . import cost_bp
+from app.projects.cost import cost_bp
 from .forms import BudgetForm, BudgetItemForm, InvoiceForm, ChangeOrderForm, PotentialChangeOrderForm
 from app.models.cost import Budget, BudgetItem, Invoice, ChangeOrder, PotentialChangeOrder, DirectCost, ApprovalLetter
 from app.models.base import Comment, Attachment
@@ -13,6 +13,93 @@ from datetime import datetime
 import hashlib
 import os
 import uuid
+from app.utils.access_control import project_access_required
+
+
+@cost_bp.route('/<int:project_id>/cost')
+@project_access_required
+@login_required
+def index(project_id):
+    """Cost dashboard with summary of all modules"""
+  
+    project = Project.query.get_or_404(project_id)
+    
+    # Check if user has permission to view cost data
+    if current_user.role not in ['Admin', 'Owner', 'Owners Representative', 'General Contractor']:
+        flash('You do not have permission to view cost information', 'danger')
+        return redirect(url_for('projects_overview.index', project_id=project_id))
+    
+    # Get budget summary
+    try:
+        budget = Budget.query.filter_by(project_id=project_id).first()
+        budget_items = BudgetItem.query.filter_by(project_id=project_id).all() if budget else []
+        
+        original_budget = sum(item.estimated_amount for item in budget_items)
+        current_budget = original_budget  # Placeholder - might be different after change orders
+        committed_cost = 0  # Placeholder
+        projected_cost = 0  # Placeholder
+        
+        # Calculate variance
+        variance = current_budget - projected_cost
+        variance_percent = (variance / current_budget * 100) if current_budget > 0 else 0
+    except:
+        original_budget = 0
+        current_budget = 0
+        committed_cost = 0
+        projected_cost = 0
+        variance = 0
+        variance_percent = 0
+    
+    # Get change orders summary
+    try:
+        approved_changes = db.session.query(db.func.sum(ChangeOrder.amount)).filter(
+            ChangeOrder.project_id == project_id,
+            ChangeOrder.status == 'approved'
+        ).scalar() or 0
+        
+        pending_changes = db.session.query(db.func.sum(PotentialChangeOrder.amount)).filter(
+            PotentialChangeOrder.project_id == project_id,
+            PotentialChangeOrder.status == 'submitted'
+        ).scalar() or 0
+    except:
+        approved_changes = 0
+        pending_changes = 0
+    
+    # Get invoices summary
+    try:
+        total_invoiced = db.session.query(db.func.sum(Invoice.amount)).filter(
+            Invoice.project_id == project_id
+        ).scalar() or 0
+        
+        paid_invoiced = db.session.query(db.func.sum(Invoice.amount)).filter(
+            Invoice.project_id == project_id,
+            Invoice.status == 'paid'
+        ).scalar() or 0
+    except:
+        total_invoiced = 0
+        paid_invoiced = 0
+    
+    # Get direct costs
+    try:
+        direct_costs = db.session.query(db.func.sum(DirectCost.amount)).filter(
+            DirectCost.project_id == project_id
+        ).scalar() or 0
+    except:
+        direct_costs = 0
+    
+    return render_template('projects/cost/dashboard.html',
+                          project=project,
+                          original_budget=original_budget,
+                          current_budget=current_budget,
+                          committed_cost=committed_cost,
+                          projected_cost=projected_cost,
+                          variance=variance,
+                          variance_percent=variance_percent,
+                          approved_changes=approved_changes,
+                          pending_changes=pending_changes,
+                          total_invoiced=total_invoiced,
+                          paid_invoiced=paid_invoiced,
+                          direct_costs=direct_costs)
 
 # Cost Dashboard
 @cost_bp.route('/dashboard')
@@ -108,40 +195,42 @@ def dashboard():
                           current_data=current_data,
                           committed_data=committed_data,
                           projected_data=projected_data)
-
 # Budget Routes
-@cost_bp.route('/budget')
+@cost_bp.route('/<int:project_id>/budget')
 @login_required
-@role_required(['Admin', 'Owner', 'Owners Representative', 'General Contractor'])
-def budget():
+def budget(project_id):
     """View project budget"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
     project = Project.query.get_or_404(project_id)
     
+    # Check if user has permission to view cost data
+    if current_user.role not in ['Admin', 'Owner', 'Owners Representative', 'General Contractor']:
+        flash('You do not have permission to view cost information', 'danger')
+        return redirect(url_for('projects_overview.index', project_id=project_id))
+    
     # Get main budget
-    budget = Budget.query.filter_by(project_id=project_id).first()
-    
-    # Get budget items
-    budget_items = BudgetItem.query.filter_by(project_id=project_id).order_by(BudgetItem.code).all()
-    
-    # Calculate totals
-    total_original = sum(item.original_amount for item in budget_items)
-    total_current = sum(item.current_amount for item in budget_items)
-    total_committed = sum(item.committed_cost for item in budget_items)
-    total_projected = sum(item.projected_cost for item in budget_items)
-    
-    # Calculate variance
-    total_variance = total_current - total_projected
+    try:
+        budget = Budget.query.filter_by(project_id=project_id).first()
+        
+        # Get budget items
+        budget_items = BudgetItem.query.filter_by(budget_id=budget.id).all() if budget else []
+        
+        # Calculate totals
+        total_amount = budget.total_amount if budget else 0
+    except:
+        budget = None
+        budget_items = []
+        total_amount = 0
     
     return render_template('projects/cost/budget/view.html',
                           project=project,
                           budget=budget,
                           budget_items=budget_items,
-                          total_original=total_original,
-                          total_current=total_current,
-                          total_committed=total_committed,
-                          total_projected=total_projected,
-                          total_variance=total_variance)
+                          total_amount=total_amount)
 
 @cost_bp.route('/budget/setup', methods=['GET', 'POST'])
 @login_required
@@ -217,21 +306,35 @@ def add_budget_item():
                           project=project, form=form)
 
 # Change Order Routes
-@cost_bp.route('/change-orders')
+@cost_bp.route('/<int:project_id>/change-orders')
 @login_required
-@role_required(['Admin', 'Owner', 'Owners Representative', 'General Contractor'])
-def change_orders():
+def change_orders(project_id):
     """List all change orders"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
     project = Project.query.get_or_404(project_id)
     
-    change_orders = ChangeOrder.query.filter_by(project_id=project_id).order_by(
-        ChangeOrder.number).all()
+    # Check if user has permission to view cost data
+    if current_user.role not in ['Admin', 'Owner', 'Owners Representative', 'General Contractor']:
+        flash('You do not have permission to view cost information', 'danger')
+        return redirect(url_for('projects_overview.index', project_id=project_id))
     
-    # Calculate totals
-    approved_total = sum(co.amount for co in change_orders if co.status == 'approved')
-    pending_total = sum(co.amount for co in change_orders if co.status == 'pending')
-    rejected_total = sum(co.amount for co in change_orders if co.status == 'rejected')
+    try:
+        change_orders = ChangeOrder.query.filter_by(project_id=project_id).order_by(
+            ChangeOrder.created_at.desc()).all()
+        
+        # Calculate totals
+        approved_total = sum(co.amount for co in change_orders if co.status == 'approved')
+        pending_total = sum(co.amount for co in change_orders if co.status == 'submitted')
+        rejected_total = sum(co.amount for co in change_orders if co.status == 'rejected')
+    except:
+        change_orders = []
+        approved_total = 0
+        pending_total = 0
+        rejected_total = 0
     
     return render_template('projects/cost/change_orders/list.html',
                           project=project,
@@ -285,23 +388,36 @@ def create_change_order():
     
     return render_template('projects/cost/change_orders/create.html',
                           project=project, form=form)
-
 # Invoice Routes
-@cost_bp.route('/invoices')
+@cost_bp.route('/<int:project_id>/invoices')
 @login_required
-@role_required(['Admin', 'Owner', 'Owners Representative', 'General Contractor'])
-def invoices():
+def invoices(project_id):
     """List all invoices"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
     project = Project.query.get_or_404(project_id)
     
-    invoices = Invoice.query.filter_by(project_id=project_id).order_by(
-        Invoice.invoice_date.desc()).all()
+    # Check if user has permission to view cost data
+    if current_user.role not in ['Admin', 'Owner', 'Owners Representative', 'General Contractor']:
+        flash('You do not have permission to view cost information', 'danger')
+        return redirect(url_for('projects_overview.index', project_id=project_id))
     
-    # Calculate totals
-    total_amount = sum(inv.amount for inv in invoices)
-    paid_amount = sum(inv.amount for inv in invoices if inv.status == 'paid')
-    pending_amount = sum(inv.amount for inv in invoices if inv.status == 'pending')
+    try:
+        invoices = Invoice.query.filter_by(project_id=project_id).order_by(
+            Invoice.date_issued.desc()).all()
+        
+        # Calculate totals
+        total_amount = sum(inv.amount for inv in invoices)
+        paid_amount = sum(inv.amount for inv in invoices if inv.status == 'paid')
+        pending_amount = sum(inv.amount for inv in invoices if inv.status == 'pending')
+    except:
+        invoices = []
+        total_amount = 0
+        paid_amount = 0
+        pending_amount = 0
     
     return render_template('projects/cost/invoices/list.html',
                           project=project,
@@ -309,7 +425,6 @@ def invoices():
                           total_amount=total_amount,
                           paid_amount=paid_amount,
                           pending_amount=pending_amount)
-
 @cost_bp.route('/invoices/create', methods=['GET', 'POST'])
 @login_required
 @role_required(['Admin', 'Owner', 'Owners Representative', 'General Contractor'])

@@ -17,8 +17,79 @@ from datetime import datetime, timedelta
 import os
 import uuid
 
-closeout_bp = Blueprint('projects.closeout', __name__)
+closeout_bp = Blueprint('projects_closeout', __name__)
 
+@closeout_bp.route('/<int:project_id>/clouseout')
+@project_access_required
+@login_required
+def index(project_id):
+    """Closeout dashboard view"""
+    # Check if user has access
+    
+        
+    project = Project.query.get_or_404(project_id)
+    
+    # Get counts for widgets
+    try:
+        manual_count = OperationAndMaintenanceManual.query.filter_by(project_id=project_id).count()
+    except:
+        manual_count = 0
+        
+    try:
+        warranty_count = Warranty.query.filter_by(project_id=project_id).count()
+    except:
+        warranty_count = 0
+        
+    try:
+        attic_stock_count = AtticStock.query.filter_by(project_id=project_id).count()
+    except:
+        attic_stock_count = 0
+        
+    try:
+        inspection_count = FinalInspection.query.filter_by(project_id=project_id).count()
+    except:
+        inspection_count = 0
+        
+    try:
+        asbuilt_count = AsBuiltDrawing.query.filter_by(project_id=project_id).count()
+    except:
+        asbuilt_count = 0
+        
+    try:
+        document_count = CloseoutDocument.query.filter_by(project_id=project_id).count()
+    except:
+        document_count = 0
+    
+    # Get expiring warranties (next 30 days)
+    try:
+        today = datetime.today().date()
+        expiring_soon = Warranty.query.filter(
+            Warranty.project_id == project_id,
+            Warranty.end_date >= today,
+            Warranty.end_date <= today + timedelta(days=30),
+            Warranty.status == 'active'
+        ).order_by(Warranty.end_date.asc()).all()
+    except:
+        expiring_soon = []
+    
+    # Get recent documents
+    try:
+        recent_documents = CloseoutDocument.query.filter_by(
+            project_id=project_id
+        ).order_by(CloseoutDocument.created_at.desc()).limit(5).all()
+    except:
+        recent_documents = []
+    
+    return render_template('projects/closeout/dashboard.html',
+                           project=project,
+                           manual_count=manual_count,
+                           warranty_count=warranty_count,
+                           attic_stock_count=attic_stock_count,
+                           inspection_count=inspection_count,
+                           asbuilt_count=asbuilt_count,
+                           document_count=document_count,
+                           expiring_soon=expiring_soon,
+                           recent_documents=recent_documents)
 # Dashboard view
 @closeout_bp.route('/dashboard')
 @login_required
@@ -60,43 +131,48 @@ def dashboard():
                            document_count=document_count,
                            expiring_soon=expiring_soon,
                            recent_documents=recent_documents)
-
-# O&M Manuals routes
-@closeout_bp.route('/manuals')
+@closeout_bp.route('/<int:project_id>/manuals')
 @login_required
-@project_access_required
-def manuals():
+def manuals(project_id):
     """List all operation and maintenance manuals"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
     project = Project.query.get_or_404(project_id)
     
     category = request.args.get('category', 'all')
     search = request.args.get('search', '')
     
-    query = OperationAndMaintenanceManual.query.filter_by(project_id=project_id)
-    
-    if category != 'all':
-        query = query.filter_by(equipment_category=category)
-    
-    if search:
-        query = query.filter(
-            db.or_(
-                OperationAndMaintenanceManual.title.ilike(f'%{search}%'),
-                OperationAndMaintenanceManual.description.ilike(f'%{search}%'),
-                OperationAndMaintenanceManual.manufacturer.ilike(f'%{search}%'),
-                OperationAndMaintenanceManual.model_number.ilike(f'%{search}%'),
-                OperationAndMaintenanceManual.location.ilike(f'%{search}%')
+    try:
+        query = OperationAndMaintenanceManual.query.filter_by(project_id=project_id)
+        
+        if category != 'all':
+            query = query.filter_by(equipment_category=category)
+        
+        if search:
+            query = query.filter(
+                db.or_(
+                    OperationAndMaintenanceManual.title.ilike(f'%{search}%'),
+                    OperationAndMaintenanceManual.description.ilike(f'%{search}%'),
+                    OperationAndMaintenanceManual.manufacturer.ilike(f'%{search}%'),
+                    OperationAndMaintenanceManual.model_number.ilike(f'%{search}%'),
+                    OperationAndMaintenanceManual.location.ilike(f'%{search}%')
+                )
             )
-        )
-    
-    manuals = query.order_by(OperationAndMaintenanceManual.title).all()
-    
-    # Get unique categories for filter
-    categories = db.session.query(OperationAndMaintenanceManual.equipment_category).filter(
-        OperationAndMaintenanceManual.project_id == project_id,
-        OperationAndMaintenanceManual.equipment_category != None,
-        OperationAndMaintenanceManual.equipment_category != ''
-    ).distinct().all()
+        
+        manuals = query.order_by(OperationAndMaintenanceManual.title).all()
+        
+        # Get unique categories for filter
+        categories = db.session.query(OperationAndMaintenanceManual.equipment_category).filter(
+            OperationAndMaintenanceManual.project_id == project_id,
+            OperationAndMaintenanceManual.equipment_category != None,
+            OperationAndMaintenanceManual.equipment_category != ''
+        ).distinct().all()
+    except:
+        manuals = []
+        categories = []
     
     return render_template('projects/closeout/manuals.html',
                            project=project,
@@ -272,36 +348,41 @@ def download_manual(manual_id):
 
 # Similar routes for Warranties, Attic Stock, Final Inspections, As-Built Drawings, and Closeout Documents
 # I'll implement warranties as an example, and the others would follow the same pattern
-
-@closeout_bp.route('/warranties')
+@closeout_bp.route('/<int:project_id>/warranties')
 @login_required
-@project_access_required
-def warranties():
+def warranties(project_id):
     """List all warranties"""
-    project_id = request.args.get('project_id', type=int)
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
     project = Project.query.get_or_404(project_id)
     
     status = request.args.get('status', 'all')
     search = request.args.get('search', '')
     
-    query = Warranty.query.filter_by(project_id=project_id)
-    
-    if status != 'all':
-        query = query.filter_by(status=status)
-    
-    if search:
-        query = query.filter(
-            db.or_(
-                Warranty.title.ilike(f'%{search}%'),
-                Warranty.description.ilike(f'%{search}%'),
-                Warranty.manufacturer.ilike(f'%{search}%'),
-                Warranty.supplier.ilike(f'%{search}%'),
-                Warranty.contractor.ilike(f'%{search}%'),
-                Warranty.equipment_category.ilike(f'%{search}%')
+    try:
+        query = Warranty.query.filter_by(project_id=project_id)
+        
+        if status != 'all':
+            query = query.filter_by(status=status)
+        
+        if search:
+            query = query.filter(
+                db.or_(
+                    Warranty.title.ilike(f'%{search}%'),
+                    Warranty.description.ilike(f'%{search}%'),
+                    Warranty.manufacturer.ilike(f'%{search}%'),
+                    Warranty.supplier.ilike(f'%{search}%'),
+                    Warranty.contractor.ilike(f'%{search}%'),
+                    Warranty.equipment_category.ilike(f'%{search}%')
+                )
             )
-        )
-    
-    warranties = query.order_by(Warranty.end_date).all()
+        
+        warranties = query.order_by(Warranty.end_date).all()
+    except:
+        warranties = []
     
     return render_template('projects/closeout/warranties.html',
                            project=project,
@@ -373,4 +454,108 @@ def create_warranty():
                            project=project,
                            form=form)
 
+# Attic Stock routes
+@closeout_bp.route('/<int:project_id>/attic-stock')
+@login_required
+def attic_stock(project_id):
+    """List all attic stock items"""
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
+    project = Project.query.get_or_404(project_id)
+    
+    try:
+        attic_stock_items = AtticStock.query.filter_by(project_id=project_id).order_by(
+            AtticStock.material_name).all()
+    except:
+        attic_stock_items = []
+    
+    return render_template('projects/closeout/attic_stock.html',
+                           project=project,
+                           attic_stock_items=attic_stock_items)
+
+# Final Inspections routes
+@closeout_bp.route('/<int:project_id>/inspections')
+@login_required
+def inspections(project_id):
+    """List all final inspections"""
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
+    project = Project.query.get_or_404(project_id)
+    
+    try:
+        inspections = FinalInspection.query.filter_by(project_id=project_id).order_by(
+            FinalInspection.inspection_date.desc()).all()
+    except:
+        inspections = []
+    
+    return render_template('projects/closeout/inspections.html',
+                           project=project,
+                           inspections=inspections)
+
+
+
+# As-Built Drawings routes
+@closeout_bp.route('/<int:project_id>/as-builts')
+@login_required
+def as_builts(project_id):
+    """List all as-built drawings"""
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
+    project = Project.query.get_or_404(project_id)
+    
+    discipline = request.args.get('discipline', 'all')
+    
+    try:
+        query = AsBuiltDrawing.query.filter_by(project_id=project_id)
+        
+        if discipline != 'all':
+            query = query.filter_by(discipline=discipline)
+        
+        drawings = query.order_by(AsBuiltDrawing.title).all()
+    except:
+        drawings = []
+    
+    return render_template('projects/closeout/as_builts.html',
+                           project=project,
+                           drawings=drawings,
+                           selected_discipline=discipline)
+
+
+# Closeout Documents routes
+@closeout_bp.route('/<int:project_id>/documents')
+@login_required
+def documents(project_id):
+    """List all closeout documents"""
+    # Check if user has access
+    if not has_project_access(current_user, project_id):
+        flash("You don't have access to this project.", "danger")
+        return redirect(url_for('projects.index'))
+        
+    project = Project.query.get_or_404(project_id)
+    
+    document_type = request.args.get('type', 'all')
+    
+    try:
+        query = CloseoutDocument.query.filter_by(project_id=project_id)
+        
+        if document_type != 'all':
+            query = query.filter_by(document_type=document_type)
+        
+        documents = query.order_by(CloseoutDocument.title).all()
+    except:
+        documents = []
+    
+    return render_template('projects/closeout/documents.html',
+                           project=project,
+                           documents=documents,
+                           selected_type=document_type)
 # Add similar view, edit, and delete routes for warranties as we did for manuals

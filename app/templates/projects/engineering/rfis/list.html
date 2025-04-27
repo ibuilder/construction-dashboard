@@ -1,0 +1,104 @@
+<!-- app/templates/projects/engineering/rfis/list.html -->
+{% extends "layout.html" %}
+
+{% block title %}RFIs - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ project.name }}</h1>
+            <p class="text-muted">{{ project.number }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_overview.index', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Project
+            </a>
+        </div>
+    </div>
+    
+    <!-- Project Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_overview.index', project_id=project.id) }}">
+                                <i class="fas fa-home"></i> Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-drafting-compass"></i> Engineering
+                            </a>
+                        </li>
+                        <!-- Add more module links here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Request for Information (RFIs)</h2>
+        <div>
+            <a href="{{ url_for('projects_engineering.create_rfi', project_id=project.id) }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New RFI
+            </a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="rfis-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Date Submitted</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rfi in rfis %}
+                        <tr>
+                            <td>{{ rfi.id }}</td>
+                            <td>{{ rfi.title }}</td>
+                            <td>{{ rfi.date_submitted.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'warning' if rfi.status == 'open' else 'success' if rfi.status == 'answered' else 'secondary' }}">
+                                    {{ rfi.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('projects_engineering.view_rfi', id=rfi.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('projects_engineering.edit_rfi', id=rfi.id) }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ rfi.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if not rfis %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No RFIs found for this project.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

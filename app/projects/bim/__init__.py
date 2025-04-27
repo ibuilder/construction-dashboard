@@ -1,3 +1,5 @@
+# File:/construction-dashboard/app/projects/bim/__init__.py
+
 from flask import Blueprint
 
 # Create blueprint with a simple name - parent relationships are handled during registration

@@ -1,7 +1,23 @@
+# app/models/engineering.py
 from app.extensions import db
 from datetime import datetime
 from sqlalchemy.sql import func
+from sqlalchemy import and_, text
 from app.models.base import Comment, Attachment
+
+# In app/models/engineering.py
+def get_comments(self):
+    """Get comments for this record"""
+    # Import Comment here to avoid circular imports
+    from app.models.base import Comment
+    return Comment.query.filter_by(module_name='rfi', record_id=self.id).all()
+
+def get_attachments(self):
+    """Get attachments for this record"""
+    from app.models.base import Attachment
+    return Attachment.query.filter_by(module_name='rfi', record_id=self.id).all()
+
+# Modifications to add assigned_to field to RFI and Submittal models
 
 class RFI(db.Model):
     __tablename__ = 'rfis'
@@ -26,12 +42,16 @@ class RFI(db.Model):
     project = db.relationship('Project', backref='rfis')
     submitter = db.relationship('User', foreign_keys=[submitted_by])
     responder = db.relationship('User', foreign_keys=[answered_by])
-    comments = db.relationship('Comment', backref='rfi',
-                              primaryjoin="and_(Comment.record_type=='rfi', "
-                                         "Comment.record_id==RFI.id)")
-    attachments = db.relationship('Attachment', backref='rfi',
-                                 primaryjoin="and_(Attachment.record_type=='rfi', "
-                                            "Attachment.record_id==RFI.id)")
+    assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'))
+    assignee = db.relationship('User', foreign_keys=[assigned_to])
+
+    def get_comments(self):
+        return Comment.query.filter_by(module_name='rfi', record_id=self.id).all()
+
+    def get_attachments(self):
+        """Get attachments for this record"""
+        from app.models.base import Attachment
+        return Attachment.query.filter_by(module_name='rfi', record_id=self.id).all()
 
 class Submittal(db.Model):
     __tablename__ = 'submittals'
@@ -56,12 +76,8 @@ class Submittal(db.Model):
     project = db.relationship('Project', backref='submittals')
     submitter = db.relationship('User', foreign_keys=[submitted_by])
     reviewer = db.relationship('User', foreign_keys=[reviewed_by])
-    comments = db.relationship('Comment', backref='submittal',
-                              primaryjoin="and_(Comment.record_type=='submittal', "
-                                         "Comment.record_id==Submittal.id)")
-    attachments = db.relationship('Attachment', backref='submittal',
-                                 primaryjoin="and_(Attachment.record_type=='submittal', "
-                                            "Attachment.record_id==Submittal.id)")
+    assigned_to = db.Column(db.Integer, db.ForeignKey('users.id'))
+    assignee = db.relationship('User', foreign_keys=[assigned_to])
 
 class Drawing(db.Model):
     __tablename__ = 'drawings'
@@ -82,12 +98,8 @@ class Drawing(db.Model):
     # Relationships
     project = db.relationship('Project', backref='drawings')
     uploader = db.relationship('User', foreign_keys=[uploaded_by])
-    comments = db.relationship('Comment', backref='drawing',
-                              primaryjoin="and_(Comment.record_type=='drawing', "
-                                         "Comment.record_id==Drawing.id)")
-    attachments = db.relationship('Attachment', backref='drawing',
-                                 primaryjoin="and_(Attachment.record_type=='drawing', "
-                                            "Attachment.record_id==Drawing.id)")
+    
+   
 
 class Specification(db.Model):
     __tablename__ = 'specifications'
@@ -106,13 +118,8 @@ class Specification(db.Model):
     # Relationships
     project = db.relationship('Project', backref='specifications')
     uploader = db.relationship('User', foreign_keys=[uploaded_by])
-    comments = db.relationship('Comment', backref='specification',
-                              primaryjoin="and_(Comment.record_type=='specification', "
-                                         "Comment.record_id==Specification.id)")
-    attachments = db.relationship('Attachment', backref='specification',
-                                 primaryjoin="and_(Attachment.record_type=='specification', "
-                                            "Attachment.record_id==Specification.id)")
-
+    
+    
 class Permit(db.Model):
     __tablename__ = 'permits'
     
@@ -134,13 +141,8 @@ class Permit(db.Model):
     # Relationships
     project = db.relationship('Project', backref='permits')
     creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='permit',
-                              primaryjoin="and_(Comment.record_type=='permit', "
-                                         "Comment.record_id==Permit.id)")
-    attachments = db.relationship('Attachment', backref='permit',
-                                 primaryjoin="and_(Attachment.record_type=='permit', "
-                                            "Attachment.record_id==Permit.id)")
-
+    
+   
 class Meeting(db.Model):
     __tablename__ = 'meetings'
     
@@ -161,13 +163,8 @@ class Meeting(db.Model):
     # Relationships
     project = db.relationship('Project', backref='meetings')
     creator = db.relationship('User', foreign_keys=[created_by])
-    comments = db.relationship('Comment', backref='meeting',
-                              primaryjoin="and_(Comment.record_type=='meeting', "
-                                         "Comment.record_id==Meeting.id)")
-    attachments = db.relationship('Attachment', backref='meeting',
-                                 primaryjoin="and_(Attachment.record_type=='meeting', "
-                                            "Attachment.record_id==Meeting.id)")
-
+    
+  
 class Transmittal(db.Model):
     __tablename__ = 'transmittals'
     
@@ -191,9 +188,5 @@ class Transmittal(db.Model):
     recipient = db.relationship('User', foreign_keys=[recipient_id])
     company_from = db.relationship('Company', foreign_keys=[company_from_id])
     company_to = db.relationship('Company', foreign_keys=[company_to_id])
-    comments = db.relationship('Comment', backref='transmittal',
-                              primaryjoin="and_(Comment.record_type=='transmittal', "
-                                         "Comment.record_id==Transmittal.id)")
-    attachments = db.relationship('Attachment', backref='transmittal',
-                                 primaryjoin="and_(Attachment.record_type=='transmittal', "
-                                            "Attachment.record_id==Transmittal.id)")
+    
+   

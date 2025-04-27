@@ -1,0 +1,94 @@
+<!-- app/templates/includes/project_sidebar.html -->
+<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+    <div class="position-sticky pt-3">
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+            <span>Project Navigation</span>
+        </h6>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if active_page == 'overview' %}active{% endif %}" href="{{ url_for('projects.view', project_id=project.id) }}">
+                    <i class="bi bi-house"></i> Overview
+                </a>
+            </li>
+            
+            <!-- Engineering Section -->
+            <li class="nav-item">
+                <a class="nav-link {% if active_section == 'engineering' %}active{% endif %}" 
+                   data-bs-toggle="collapse" href="#engineeringSubmenu">
+                    <i class="bi bi-tools"></i> Engineering
+                </a>
+                <div class="collapse {% if active_section == 'engineering' %}show{% endif %}" id="engineeringSubmenu">
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'rfis' %}active{% endif %}" 
+                               href="{{ url_for('projects.projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="bi bi-question-circle"></i> RFIs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'submittals' %}active{% endif %}" 
+                               href="{{ url_for('projects.engineering.submittals', project_id=project.id) }}">
+                                <i class="bi bi-file-earmark-check"></i> Submittals
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'drawings' %}active{% endif %}" 
+                               href="{{ url_for('projects.engineering.drawings', project_id=project.id) }}">
+                                <i class="bi bi-file-earmark-ruled"></i> Drawings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'specifications' %}active{% endif %}" 
+                               href="{{ url_for('projects.engineering.specifications', project_id=project.id) }}">
+                                <i class="bi bi-journal-text"></i> Specifications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'files' %}active{% endif %}" 
+                               href="{{ url_for('projects.engineering.files', project_id=project.id) }}">
+                                <i class="bi bi-folder"></i> Files
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'permits' %}active{% endif %}" 
+                               href="{{ url_for('projects.engineering.permits', project_id=project.id) }}">
+                                <i class="bi bi-clipboard-check"></i> Permits
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'meetings' %}active{% endif %}" 
+                               href="{{ url_for('projects.engineering.meetings', project_id=project.id) }}">
+                                <i class="bi bi-calendar-event"></i> Meetings
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'transmittals' %}active{% endif %}" 
+                               href="{{ url_for('projects.engineering.transmittals', project_id=project.id) }}">
+                                <i class="bi bi-send"></i> Transmittals
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            
+            <!-- Add other module sections similarly -->
+            <li class="nav-item">
+                <a class="nav-link {% if active_section == 'field' %}active{% endif %}" 
+                   data-bs-toggle="collapse" href="#fieldSubmenu">
+                    <i class="bi bi-hard-hat"></i> Field
+                </a>
+                <!-- Field submenu -->
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link {% if active_section == 'safety' %}active{% endif %}" 
+                   data-bs-toggle="collapse" href="#safetySubmenu">
+                    <i class="bi bi-shield"></i> Safety
+                </a>
+                <!-- Safety submenu -->
+            </li>
+            
+            <!-- Add other sections as needed -->
+        </ul>
+    </div>
+</nav>

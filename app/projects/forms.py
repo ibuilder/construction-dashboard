@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, SelectField, DateField, FloatField, MultipleFileField, SubmitField, SelectMultipleField
+from wtforms import StringField, TextAreaField, SelectField, DateField, FloatField, MultipleFileField, SubmitField, SelectMultipleField, IntegerField
 from wtforms.validators import DataRequired, Length, Optional, NumberRange, ValidationError
-from app.utils.validators import ValidProjectNumber
+
 from app.models.project import Project, ProjectStatus
 from app.models.user import User
 from datetime import date
@@ -27,7 +27,7 @@ PROJECT_CATEGORIES = [
 class ProjectForm(FlaskForm):
     """Base form for project creation and editing"""
     name = StringField('Project Name', validators=[DataRequired(), Length(min=3, max=255)])
-    number = StringField('Project Number', validators=[DataRequired(), Length(min=3, max=64), ValidProjectNumber()])
+    number = IntegerField('Project Number', validators=[DataRequired(), NumberRange(min=1)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=2000)])
     
     # Basic info

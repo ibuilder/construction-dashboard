@@ -1,3 +1,4 @@
+# app/models/safety.py
 from datetime import datetime
 from app.extensions import db
 from sqlalchemy.sql import func
@@ -67,9 +68,13 @@ class SafetyObservation(db.Model):
     observer = db.relationship('User', foreign_keys=[observed_by], backref='observations')
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_observations')
     closer = db.relationship('User', foreign_keys=[closed_by], backref='closed_observations')
-    photos = db.relationship('SafetyPhoto', backref='observation', lazy='dynamic',
-                           primaryjoin="and_(SafetyPhoto.record_type=='observation', "
-                                      "SafetyPhoto.record_id==SafetyObservation.id)")
+    photos = db.relationship(
+        'SafetyPhoto',
+        primaryjoin="and_(SafetyPhoto.record_type=='observation', "
+                "foreign(SafetyPhoto.record_id)==SafetyObservation.id)",
+        backref='observation',
+        lazy='dynamic'
+    )
     
     def __repr__(self):
         return f'<SafetyObservation {self.id}: {self.title}>'

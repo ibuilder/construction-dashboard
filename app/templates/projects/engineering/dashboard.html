@@ -1,0 +1,310 @@
+{% extends "layout.html" %}
+
+{% block title %}Engineering Dashboard - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ project.name }}</h1>
+            <p class="text-muted">{{ project.number }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_overview.index', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Project
+            </a>
+        </div>
+    </div>
+    
+    <!-- Project Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_overview.index', project_id=project.id) }}">
+                                <i class="fas fa-home"></i> Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('engineering.dashboard', project_id=project.id) }}">
+                                <i class="fas fa-drafting-compass"></i> Engineering
+                            </a>
+                        </li>
+                        <!-- Add more module links here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Engineering Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('engineering.dashboard', project_id=project.id) }}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-question-circle"></i> RFIs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('engineering.submittals', project_id=project.id) }}">
+                                <i class="fas fa-file-alt"></i> Submittals
+                            </a>
+                        </li>
+                        <!-- Add more engineering tabs here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">RFIs</h6>
+                            <h2 class="mb-0">{{ rfi_count }}</h2>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <i class="fas fa-question-circle fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}" class="btn btn-sm btn-primary">View All</a>
+                        <a href="{{ url_for('engineering.create_rfi', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">Add New</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Submittals</h6>
+                            <h2 class="mb-0">{{ submittal_count }}</h2>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <i class="fas fa-file-alt fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('engineering.submittals', project_id=project.id) }}" class="btn btn-sm btn-success">View All</a>
+                        <a href="{{ url_for('engineering.create_submittal', project_id=project.id) }}" class="btn btn-sm btn-outline-success">Add New</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Drawings</h6>
+                            <h2 class="mb-0">{{ drawing_count }}</h2>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <i class="fas fa-drafting-compass fa-2x text-info"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('engineering.drawings', project_id=project.id) }}" class="btn btn-sm btn-info">View All</a>
+                        <a href="{{ url_for('engineering.create_drawing', project_id=project.id) }}" class="btn btn-sm btn-outline-info">Add New</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Second Row of Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Specifications</h6>
+                            <h2 class="mb-0">{{ spec_count }}</h2>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <i class="fas fa-book fa-2x text-secondary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Permits</h6>
+                            <h2 class="mb-0">{{ permit_count }}</h2>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <i class="fas fa-clipboard-check fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Meetings</h6>
+                            <h2 class="mb-0">{{ meeting_count }}</h2>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <i class="fas fa-users fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Transmittals</h6>
+                            <h2 class="mb-0">{{ transmittal_count }}</h2>
+                        </div>
+                        <div class="bg-light p-3 rounded">
+                            <i class="fas fa-paper-plane fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts and Recent Items -->
+    <div class="row">
+        <!-- RFI Status Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">RFI Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if rfi_data %}
+                    <canvas id="rfiChart" height="240"></canvas>
+                    {% else %}
+                    <div class="text-center p-4">
+                        <p class="text-muted">No RFI data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submittal Status Chart -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Submittal Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if submittal_data %}
+                    <canvas id="submittalChart" height="240"></canvas>
+                    {% else %}
+                    <div class="text-center p-4">
+                        <p class="text-muted">No submittal data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    // RFI Chart
+    {% if rfi_data %}
+    var rfiCtx = document.getElementById('rfiChart').getContext('2d');
+    var rfiChart = new Chart(rfiCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ rfi_labels|tojson }},
+            datasets: [{
+                data: {{ rfi_data|tojson }},
+                backgroundColor: [
+                    '#ffc107',  // Open - warning
+                    '#28a745',  // Answered - success
+                    '#17a2b8',  // Under Review - info
+                    '#6c757d',  // Closed - secondary
+                    '#dc3545'   // Rejected - danger
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+    {% endif %}
+    
+    // Submittal Chart
+    {% if submittal_data %}
+    var submittalCtx = document.getElementById('submittalChart').getContext('2d');
+    var submittalChart = new Chart(submittalCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ submittal_labels|tojson }},
+            datasets: [{
+                data: {{ submittal_data|tojson }},
+                backgroundColor: [
+                    '#ffc107',  // Pending - warning
+                    '#17a2b8',  // Under Review - info
+                    '#28a745',  // Approved - success
+                    '#007bff',  // Approved with Comments - primary
+                    '#6c757d',  // Revise and Resubmit - secondary
+                    '#dc3545'   // Rejected - danger
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

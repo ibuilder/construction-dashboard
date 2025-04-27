@@ -40,6 +40,7 @@ def register_commands(app):
             admin_role = Role.query.filter_by(name='Admin').first()
             user.role = admin_role
         
+        from app.extensions import db
         db.session.add(user)
         db.session.commit()
         

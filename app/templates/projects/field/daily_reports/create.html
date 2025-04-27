@@ -1,347 +1,508 @@
+<!-- app/templates/projects/field/daily_reports/create.html -->
 {% extends "layout.html" %}
 
-{% block title %}Create Daily Report - {{ project.name }}{% endblock %}
-
-{% block styles %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<style>
-    .manpower-entry {
-        background-color: #f8f9fc;
-        padding: 15px;
-        margin-bottom: 10px;
-        border-radius: 5px;
-        border: 1px solid #e3e6f0;
-    }
-    .remove-entry {
-        color: #e74a3b;
-        cursor: pointer;
-    }
-    .weather-icon {
-        font-size: 1.5rem;
-        margin-right: 5px;
-    }
-    .preview-image {
-        max-height: 150px;
-        margin: 5px;
-        border: 1px solid #ddd;
-    }
-</style>
-{% endblock %}
+{% block title %}{{ project.name }} - Create Daily Report{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Create Daily Report</h1>
         <div>
-            <a href="{{ url_for('projects.field.daily_reports', project_id=project.id) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Reports
+            <h1 class="h3 mb-0">Create Daily Report</h1>
+            <p class="text-muted">{{ project.name }} ({{ project.number }})</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_field.daily_reports', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Daily Reports
             </a>
         </div>
     </div>
     
+    <!-- Form Card -->
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">{{ project.name }} - New Daily Report</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Daily Report Form</h6>
         </div>
         <div class="card-body">
-            <form method="post" enctype="multipart/form-data" id="dailyReportForm">
+            <form id="dailyReportForm" method="post" action="{{ url_for('projects_field.create_daily_report', project_id=project.id) }}" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
                 
-                <div class="row mb-3">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            {{ form.report_date.label(class="form-label") }}
-                            {{ form.report_date(class="form-control", type="date") }}
-                            {% if form.report_date.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.report_date.errors %}
-                                <span>{{ error }}</span>
-                                {% endfor %}
+                <!-- Form Tabs -->
+                <ul class="nav nav-tabs mb-4" id="reportFormTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">General</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="weather-tab" data-bs-toggle="tab" data-bs-target="#weather" type="button" role="tab" aria-controls="weather" aria-selected="false">Weather</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="work-tab" data-bs-toggle="tab" data-bs-target="#work" type="button" role="tab" aria-controls="work" aria-selected="false">Work & Materials</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="labor-tab" data-bs-toggle="tab" data-bs-target="#labor" type="button" role="tab" aria-controls="labor" aria-selected="false">Labor</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="equipment-tab" data-bs-toggle="tab" data-bs-target="#equipment" type="button" role="tab" aria-controls="equipment" aria-selected="false">Equipment</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab" aria-controls="photos" aria-selected="false">Photos</button>
+                    </li>
+                </ul>
+                
+                <!-- Form Tab Content -->
+                <div class="tab-content" id="reportFormTabsContent">
+                    <!-- General Tab -->
+                    <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.report_number.id }}" class="form-label">Report Number <span class="text-danger">*</span></label>
+                                {{ form.report_number(class="form-control" + (" is-invalid" if form.report_number.errors else ""), readonly=true) }}
+                                {% if form.report_number.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.report_number.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            {{ form.report_number.label(class="form-label") }}
-                            {{ form.report_number(class="form-control") }}
-                            {% if form.report_number.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.report_number.errors %}
-                                <span>{{ error }}</span>
-                                {% endfor %}
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.report_date.id }}" class="form-label">Report Date <span class="text-danger">*</span></label>
+                                {{ form.report_date(class="form-control" + (" is-invalid" if form.report_date.errors else ""), type="date") }}
+                                {% if form.report_date.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.report_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
-                            {% endif %}
                         </div>
-                    </div>
-                </div>
-
-                <h5 class="mb-3">Weather Conditions</h5>
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            {{ form.weather_condition.label(class="form-label") }}
-                            {{ form.weather_condition(class="form-select") }}
-                            {% if form.weather_condition.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.weather_condition.errors %}
-                                <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            {{ form.temperature_low.label(class="form-label") }}
-                            {{ form.temperature_low(class="form-control") }}
-                            {% if form.temperature_low.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.temperature_low.errors %}
-                                <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            {{ form.temperature_high.label(class="form-label") }}
-                            {{ form.temperature_high(class="form-control") }}
-                            {% if form.temperature_high.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.temperature_high.errors %}
-                                <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            {{ form.precipitation.label(class="form-label") }}
-                            {{ form.precipitation(class="form-control") }}
-                            {% if form.precipitation.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.precipitation.errors %}
-                                <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <h5 class="mb-3">Site Status</h5>
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            {{ form.work_status.label(class="form-label") }}
-                            {{ form.work_status(class="form-select") }}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.work_status.id }}" class="form-label">Work Status <span class="text-danger">*</span></label>
+                            {{ form.work_status(class="form-select" + (" is-invalid" if form.work_status.errors else "")) }}
                             {% if form.work_status.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.work_status.errors %}
-                                <span>{{ error }}</span>
-                                {% endfor %}
-                            </div>
+                                <div class="invalid-feedback">
+                                    {% for error in form.work_status.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 delay-reason-container" style="display: none;">
+                            <label for="{{ form.delay_reason.id }}" class="form-label">Reason for Delay <span class="text-danger">*</span></label>
+                            {{ form.delay_reason(class="form-control" + (" is-invalid" if form.delay_reason.errors else ""), rows=3) }}
+                            {% if form.delay_reason.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.delay_reason.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
                         </div>
                     </div>
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            {{ form.site_conditions.label(class="form-label") }}
-                            {{ form.site_conditions(class="form-control", rows=2) }}
+                    
+                    <!-- Weather Tab -->
+                    <div class="tab-pane fade" id="weather" role="tabpanel" aria-labelledby="weather-tab">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.weather_condition.id }}" class="form-label">Weather Condition <span class="text-danger">*</span></label>
+                                {{ form.weather_condition(class="form-select" + (" is-invalid" if form.weather_condition.errors else "")) }}
+                                {% if form.weather_condition.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.weather_condition.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="weather-icon-preview text-center">
+                                    <i class="fas fa-sun fa-3x text-warning weather-icon" id="weatherIcon"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.temperature_low.id }}" class="form-label">Low Temperature (°F)</label>
+                                {{ form.temperature_low(class="form-control" + (" is-invalid" if form.temperature_low.errors else ""), type="number") }}
+                                {% if form.temperature_low.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.temperature_low.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.temperature_high.id }}" class="form-label">High Temperature (°F)</label>
+                                {{ form.temperature_high(class="form-control" + (" is-invalid" if form.temperature_high.errors else ""), type="number") }}
+                                {% if form.temperature_high.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.temperature_high.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.precipitation.id }}" class="form-label">Precipitation (in)</label>
+                                {{ form.precipitation(class="form-control" + (" is-invalid" if form.precipitation.errors else ""), type="number", step="0.01") }}
+                                {% if form.precipitation.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.precipitation.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.wind_speed.id }}" class="form-label">Wind Speed (mph)</label>
+                                {{ form.wind_speed(class="form-control" + (" is-invalid" if form.wind_speed.errors else ""), type="number") }}
+                                {% if form.wind_speed.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.wind_speed.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.site_conditions.id }}" class="form-label">Site Conditions</label>
+                            {{ form.site_conditions(class="form-control" + (" is-invalid" if form.site_conditions.errors else ""), rows=3) }}
                             {% if form.site_conditions.errors %}
-                            <div class="invalid-feedback d-block">
-                                {% for error in form.site_conditions.errors %}
-                                <span>{{ error }}</span>
+                                <div class="invalid-feedback">
+                                    {% for error in form.site_conditions.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Describe any relevant site conditions (e.g., muddy, dry, icy, etc.)</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Work & Materials Tab -->
+                    <div class="tab-pane fade" id="work" role="tabpanel" aria-labelledby="work-tab">
+                        <div class="mb-3">
+                            <label for="{{ form.work_summary.id }}" class="form-label">Work Performed <span class="text-danger">*</span></label>
+                            {{ form.work_summary(class="form-control" + (" is-invalid" if form.work_summary.errors else ""), rows=6) }}
+                            {% if form.work_summary.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.work_summary.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Provide a detailed description of work completed today</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.materials_received.id }}" class="form-label">Materials Received</label>
+                            {{ form.materials_received(class="form-control" + (" is-invalid" if form.materials_received.errors else ""), rows=4) }}
+                            {% if form.materials_received.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.materials_received.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.issues.id }}" class="form-label">Issues Encountered</label>
+                            {{ form.issues(class="form-control" + (" is-invalid" if form.issues.errors else ""), rows=4) }}
+                            {% if form.issues.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.issues.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Describe any issues, obstacles, or problems encountered during work</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id }}" class="form-label">Additional Notes</label>
+                            {{ form.notes(class="form-control" + (" is-invalid" if form.notes.errors else ""), rows=4) }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.notes.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Labor Tab -->
+                    <div class="tab-pane fade" id="labor" role="tabpanel" aria-labelledby="labor-tab">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Labor Entries</h5>
+                                <button type="button" class="btn btn-sm btn-primary" id="addLaborEntry">
+                                    <i class="fas fa-plus me-1"></i> Add Labor Entry
+                                </button>
+                            </div>
+                            
+                            <div id="labor-entries-container">
+                                {% for entry in form.labor_entries %}
+                                    <div class="card mb-3 labor-entry">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span>Labor Entry #{{ loop.index }}</span>
+                                            {% if loop.index > 1 %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-labor-entry">
+                                                    <i class="fas fa-trash"></i> Remove
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Company <span class="text-danger">*</span></label>
+                                                    {{ entry.company(class="form-control", placeholder="Company name") }}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Description of Work <span class="text-danger">*</span></label>
+                                                    {{ entry.work_description(class="form-control", placeholder="Brief description of work performed") }}
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Number of Workers <span class="text-danger">*</span></label>
+                                                    {{ entry.worker_count(class="form-control", type="number", min="1") }}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Hours Worked <span class="text-danger">*</span></label>
+                                                    {{ entry.hours_worked(class="form-control", type="number", step="0.5", min="0.5") }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 {% endfor %}
                             </div>
+                            
+                            <template id="labor-entry-template">
+                                <div class="card mb-3 labor-entry">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <span>New Labor Entry</span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-labor-entry">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Company <span class="text-danger">*</span></label>
+                                                <input class="form-control" name="labor_entries-$index-company" placeholder="Company name" required>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Description of Work <span class="text-danger">*</span></label>
+                                                <input class="form-control" name="labor_entries-$index-work_description" placeholder="Brief description of work performed" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Number of Workers <span class="text-danger">*</span></label>
+                                                <input class="form-control" name="labor_entries-$index-worker_count" type="number" min="1" value="1" required>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Hours Worked <span class="text-danger">*</span></label>
+                                                <input class="form-control" name="labor_entries-$index-hours_worked" type="number" step="0.5" min="0.5" value="8" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Equipment Tab -->
+                    <div class="tab-pane fade" id="equipment" role="tabpanel" aria-labelledby="equipment-tab">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Equipment Entries</h5>
+                                <button type="button" class="btn btn-sm btn-primary" id="addEquipmentEntry">
+                                    <i class="fas fa-plus me-1"></i> Add Equipment Entry
+                                </button>
+                            </div>
+                            
+                            <div id="equipment-entries-container">
+                                {% for entry in form.equipment_entries %}
+                                    <div class="card mb-3 equipment-entry">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <span>Equipment Entry #{{ loop.index }}</span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-equipment-entry">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Equipment Type <span class="text-danger">*</span></label>
+                                                    {{ entry.equipment_type(class="form-control", placeholder="Type of equipment") }}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Count <span class="text-danger">*</span></label>
+                                                    {{ entry.count(class="form-control", type="number", min="1") }}
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Hours Used <span class="text-danger">*</span></label>
+                                                    {{ entry.hours_used(class="form-control", type="number", step="0.5", min="0") }}
+                                                </div>
+                                                
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Notes</label>
+                                                    {{ entry.notes(class="form-control", placeholder="Additional information") }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <template id="equipment-entry-template">
+                                <div class="card mb-3 equipment-entry">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <span>New Equipment Entry</span>
+                                        <button type="button" class="btn btn-sm btn-outline-danger remove-equipment-entry">
+                                            <i class="fas fa-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Equipment Type <span class="text-danger">*</span></label>
+                                                <input class="form-control" name="equipment_entries-$index-equipment_type" placeholder="Type of equipment" required>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Count <span class="text-danger">*</span></label>
+                                                <input class="form-control" name="equipment_entries-$index-count" type="number" min="1" value="1" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Hours Used <span class="text-danger">*</span></label>
+                                                <input class="form-control" name="equipment_entries-$index-hours_used" type="number" step="0.5" min="0" value="8" required>
+                                            </div>
+                                            
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Notes</label>
+                                                <input class="form-control" name="equipment_entries-$index-notes" placeholder="Additional information">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Photos Tab -->
+                    <div class="tab-pane fade" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+                        <div class="mb-3">
+                            <label for="{{ form.photos.id }}" class="form-label">Upload Photos</label>
+                            <div class="input-group">
+                                {{ form.photos(class="form-control" + (" is-invalid" if form.photos.errors else ""), id="photoInput") }}
+                                <button class="btn btn-outline-secondary" type="button" id="resetPhotosBtn">Reset</button>
+                            </div>
+                            {% if form.photos.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.photos.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
                             {% endif %}
+                            <div class="form-text">You can select multiple photos. Allowed file types: JPG, JPEG, PNG</div>
+                        </div>
+                        
+                        <!-- Photo Preview Container -->
+                        <div id="photoPreviewContainer" class="mt-4">
+                            <h6>Selected Photos Preview:</h6>
+                            <div class="row" id="photoPreviewRow">
+                                <!-- Preview images will be displayed here -->
+                            </div>
+                            <div class="alert alert-info" id="noPhotosMessage">
+                                <i class="fas fa-info-circle me-2"></i> No photos selected. Photos are optional but recommended for documenting site conditions and progress.
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="form-group mb-4" id="delayReasonContainer">
-                    {{ form.delay_reason.label(class="form-label") }}
-                    {{ form.delay_reason(class="form-control", rows=2) }}
-                    {% if form.delay_reason.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.delay_reason.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
+                <!-- Submit Buttons -->
+                <div class="mt-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary" onclick="window.history.back();">Cancel</button>
+                    <div>
+                        {{ form.save_draft(class="btn btn-secondary me-2") }}
+                        {{ form.submit_report(class="btn btn-primary") }}
                     </div>
-                    {% endif %}
-                </div>
-
-                <h5 class="mb-3">Labor</h5>
-                <div id="labor-entries">
-                    {% for entry in form.labor_entries %}
-                    <div class="labor-entry card mb-3">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        {{ entry.company.label(class="form-label") }}
-                                        {{ entry.company(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="form-group">
-                                        {{ entry.work_description.label(class="form-label") }}
-                                        {{ entry.work_description(class="form-control") }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        {{ entry.worker_count.label(class="form-label") }}
-                                        {{ entry.worker_count(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        {{ entry.hours_worked.label(class="form-label") }}
-                                        {{ entry.hours_worked(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-6 d-flex align-items-end">
-                                    <button type="button" class="btn btn-danger remove-labor-entry mt-2">
-                                        <i class="bi bi-trash"></i> Remove
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <button type="button" class="btn btn-outline-primary mb-4" id="add-labor-entry">
-                    <i class="bi bi-plus-circle"></i> Add Labor Entry
-                </button>
-
-                <h5 class="mb-3">Equipment</h5>
-                <div id="equipment-entries">
-                    {% for entry in form.equipment_entries %}
-                    <div class="equipment-entry card mb-3">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        {{ entry.equipment_type.label(class="form-label") }}
-                                        {{ entry.equipment_type(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        {{ entry.count.label(class="form-label") }}
-                                        {{ entry.count(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        {{ entry.hours_used.label(class="form-label") }}
-                                        {{ entry.hours_used(class="form-control") }}
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="form-group">
-                                        {{ entry.notes.label(class="form-label") }}
-                                        {{ entry.notes(class="form-control") }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-12 d-flex justify-content-end">
-                                    <button type="button" class="btn btn-danger remove-equipment-entry">
-                                        <i class="bi bi-trash"></i> Remove
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <button type="button" class="btn btn-outline-primary mb-4" id="add-equipment-entry">
-                    <i class="bi bi-plus-circle"></i> Add Equipment Entry
-                </button>
-
-                <h5 class="mb-3">Work Details</h5>
-                <div class="form-group mb-3">
-                    {{ form.work_performed.label(class="form-label") }}
-                    {{ form.work_performed(class="form-control", rows=4) }}
-                    {% if form.work_performed.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.work_performed.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="form-group mb-4">
-                    {{ form.materials_received.label(class="form-label") }}
-                    {{ form.materials_received(class="form-control", rows=3) }}
-                    {% if form.materials_received.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.materials_received.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <h5 class="mb-3">Issues & Notes</h5>
-                <div class="form-group mb-3">
-                    {{ form.issues.label(class="form-label") }}
-                    {{ form.issues(class="form-control", rows=3) }}
-                    {% if form.issues.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.issues.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <div class="form-group mb-4">
-                    {{ form.notes.label(class="form-label") }}
-                    {{ form.notes(class="form-control", rows=3) }}
-                    {% if form.notes.errors %}
-                    <div class="invalid-feedback d-block">
-                        {% for error in form.notes.errors %}
-                        <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-
-                <h5 class="mb-3">Photos</h5>
-                <div class="form-group mb-4">
-                    {{ form.photos.label(class="form-label") }}
-                    {{ form.photos(class="form-control") }}
-                    <div class="form-text text-muted">
-                        Upload multiple photos related to today's work. Supported formats: JPG, PNG.
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end mt-4">
-                    {{ form.save_draft(class="btn btn-secondary me-2") }}
-                    {{ form.submit_report(class="btn btn-primary") }}
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Weather condition icon updater
+        const weatherConditionSelect = document.getElementById('{{ form.weather_condition.id }}');
+        const weatherIcon = document.getElementById('weatherIcon');
+        
+        function updateWeatherIcon() {
+            const weatherClass = getWeatherIconClass(weatherConditionSelect.value);
+            weatherIcon.className = weatherClass;
+        }
+        
+        function getWeatherIconClass(condition) {
+            switch(condition) {
+                case 'sunny':
+                    return 'fas fa-sun fa-3x text-warning';
+                case 'partly_cloudy':
+                    return 'fas fa-cloud-sun fa-3x text-warning';
+                case 'cloudy':
+                    return 'fas fa-cloud fa-3x text-secondary';
+                case 'rainy':
+                    return 'fas fa-cloud-rain fa-3x text-primary';
+                case 'stormy':
+                    return 'fas fa-bolt fa-3x text-warning';
+                case 'snowy':
+                    return 'fas fa-snowflake fa-3x text-info';
+                case 'foggy':
+                    return 'fas fa-smog fa-3x text-secondary';
+                case 'windy':
+                    return 'fas fa-wind fa-3x text-info';
+                default:
+                    return 'fas fa-question-circle fa-3x text-muted';
+            }
+        }
+        
+        weatherConditionSelect.addEventListener('change', updateWeatherIcon);
+        updateWeatherIcon(); // Initialize icon
+        
         // Show/hide delay reason based on work status
-        const workStatusSelect = document.getElementById('work_status');
-        const delayReasonContainer = document.getElementById('delayReasonContainer');
+        const workStatusSelect = document.getElementById('{{ form.work_status.id }}');
+        const delayReasonContainer = document.querySelector('.delay-reason-container');
         
         function toggleDelayReason() {
             if (workStatusSelect.value === 'delayed' || workStatusSelect.value === 'halted') {
@@ -351,137 +512,177 @@
             }
         }
         
-        // Initial toggle
-        toggleDelayReason();
-        
-        // Toggle on change
         workStatusSelect.addEventListener('change', toggleDelayReason);
+        toggleDelayReason(); // Initialize visibility
         
         // Labor entries management
-        const laborEntriesContainer = document.getElementById('labor-entries');
-        const addLaborEntryBtn = document.getElementById('add-labor-entry');
+        const laborEntriesContainer = document.getElementById('labor-entries-container');
+        const laborEntryTemplate = document.getElementById('labor-entry-template');
+        const addLaborEntryBtn = document.getElementById('addLaborEntry');
+        let laborEntryCounter = document.querySelectorAll('.labor-entry').length;
         
-        // Add labor entry
-        addLaborEntryBtn.addEventListener('click', function() {
-            const index = laborEntriesContainer.children.length;
-            const entryHtml = `
-            <div class="labor-entry card mb-3">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label" for="labor_entries-${index}-company">Company</label>
-                                <input class="form-control" id="labor_entries-${index}-company" name="labor_entries-${index}-company" required type="text" value="">
-                            </div>
-                        </div>
-                        <div class="col-md-8">
-                            <div class="form-group">
-                                <label class="form-label" for="labor_entries-${index}-work_description">Description of Work</label>
-                                <input class="form-control" id="labor_entries-${index}-work_description" name="labor_entries-${index}-work_description" required type="text" value="">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label" for="labor_entries-${index}-worker_count">Number of Workers</label>
-                                <input class="form-control" id="labor_entries-${index}-worker_count" min="1" name="labor_entries-${index}-worker_count" required type="number" value="1">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="form-group">
-                                <label class="form-label" for="labor_entries-${index}-hours_worked">Hours Worked</label>
-                                <input class="form-control" id="labor_entries-${index}-hours_worked" min="0.5" name="labor_entries-${index}-hours_worked" required step="0.5" type="number" value="8">
-                            </div>
-                        </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger remove-labor-entry mt-2">
-                                <i class="bi bi-trash"></i> Remove
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+        function addLaborEntry() {
+            const template = laborEntryTemplate.content.cloneNode(true);
+            const newEntry = template.querySelector('.labor-entry');
             
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = entryHtml.trim();
-            laborEntriesContainer.appendChild(tempDiv.firstChild);
-        });
+            // Update input names with correct index
+            const inputs = template.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.name = input.name.replace('$index', laborEntryCounter);
+            });
+            
+            // Add removal event handler
+            const removeBtn = template.querySelector('.remove-labor-entry');
+            removeBtn.addEventListener('click', function() {
+                newEntry.remove();
+                updateLaborEntryNumbers();
+            });
+            
+            laborEntriesContainer.appendChild(template);
+            laborEntryCounter++;
+            updateLaborEntryNumbers();
+        }
         
-        // Remove labor entry
-        laborEntriesContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-labor-entry') || e.target.parentElement.classList.contains('remove-labor-entry')) {
-                const entry = (e.target.closest('.labor-entry'));
-                if (laborEntriesContainer.children.length > 1) {
-                    entry.remove();
-                } else {
-                    alert('At least one labor entry is required.');
-                }
-            }
+        function updateLaborEntryNumbers() {
+            document.querySelectorAll('.labor-entry').forEach((entry, index) => {
+                const header = entry.querySelector('.card-header span');
+                header.textContent = `Labor Entry #${index + 1}`;
+            });
+        }
+        
+        // Add event listeners for labor entries
+        addLaborEntryBtn.addEventListener('click', addLaborEntry);
+        
+        document.querySelectorAll('.remove-labor-entry').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.labor-entry').remove();
+                updateLaborEntryNumbers();
+            });
         });
         
         // Equipment entries management
-        const equipmentEntriesContainer = document.getElementById('equipment-entries');
-        const addEquipmentEntryBtn = document.getElementById('add-equipment-entry');
+        const equipmentEntriesContainer = document.getElementById('equipment-entries-container');
+        const equipmentEntryTemplate = document.getElementById('equipment-entry-template');
+        const addEquipmentEntryBtn = document.getElementById('addEquipmentEntry');
+        let equipmentEntryCounter = document.querySelectorAll('.equipment-entry').length;
         
-        // Add equipment entry
-        addEquipmentEntryBtn.addEventListener('click', function() {
-            const index = equipmentEntriesContainer.children.length;
-            const entryHtml = `
-            <div class="equipment-entry card mb-3">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label" for="equipment_entries-${index}-equipment_type">Equipment Type</label>
-                                <input class="form-control" id="equipment_entries-${index}-equipment_type" name="equipment_entries-${index}-equipment_type" required type="text" value="">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="form-label" for="equipment_entries-${index}-count">Count</label>
-                                <input class="form-control" id="equipment_entries-${index}-count" min="1" name="equipment_entries-${index}-count" required type="number" value="1">
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <div class="form-group">
-                                <label class="form-label" for="equipment_entries-${index}-hours_used">Hours Used</label>
-                                <input class="form-control" id="equipment_entries-${index}-hours_used" min="0" name="equipment_entries-${index}-hours_used" required step="0.5" type="number" value="8">
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label class="form-label" for="equipment_entries-${index}-notes">Notes</label>
-                                <input class="form-control" id="equipment_entries-${index}-notes" name="equipment_entries-${index}-notes" type="text" value="">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-12 d-flex justify-content-end">
-                            <button type="button" class="btn btn-danger remove-equipment-entry">
-                                <i class="bi bi-trash"></i> Remove
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
+        function addEquipmentEntry() {
+            const template = equipmentEntryTemplate.content.cloneNode(true);
+            const newEntry = template.querySelector('.equipment-entry');
             
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = entryHtml.trim();
-            equipmentEntriesContainer.appendChild(tempDiv.firstChild);
+            // Update input names with correct index and add form association
+            const inputs = template.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.name = input.name.replace('$index', equipmentEntryCounter);
+                input.setAttribute('form', 'dailyReportForm'); // Add this line
+            });
+            
+            // Add removal event handler
+            const removeBtn = template.querySelector('.remove-equipment-entry');
+            removeBtn.addEventListener('click', function() {
+                newEntry.remove();
+                updateEquipmentEntryNumbers();
+            });
+            
+            equipmentEntriesContainer.appendChild(template);
+            equipmentEntryCounter++;
+            updateEquipmentEntryNumbers();
+        }
+        
+        function updateEquipmentEntryNumbers() {
+            document.querySelectorAll('.equipment-entry').forEach((entry, index) => {
+                const header = entry.querySelector('.card-header span');
+                header.textContent = `Equipment Entry #${index + 1}`;
+            });
+        }
+        
+        // Add event listeners for equipment entries
+        addEquipmentEntryBtn.addEventListener('click', addEquipmentEntry);
+        
+        document.querySelectorAll('.remove-equipment-entry').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.equipment-entry').remove();
+                updateEquipmentEntryNumbers();
+            });
         });
         
-        // Remove equipment entry
-        equipmentEntriesContainer.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-equipment-entry') || e.target.parentElement.classList.contains('remove-equipment-entry')) {
-                const entry = (e.target.closest('.equipment-entry'));
-                if (equipmentEntriesContainer.children.length > 1) {
-                    entry.remove();
-                } else {
-                    alert('At least one equipment entry is required.');
+        // Photo preview functionality
+        const photoInput = document.getElementById('photoInput');
+        const photoPreviewRow = document.getElementById('photoPreviewRow');
+        const noPhotosMessage = document.getElementById('noPhotosMessage');
+        const resetPhotosBtn = document.getElementById('resetPhotosBtn');
+        
+        photoInput.addEventListener('change', function() {
+            // Clear previous previews
+            photoPreviewRow.innerHTML = '';
+            
+            if (this.files.length > 0) {
+                noPhotosMessage.style.display = 'none';
+                
+                for (let i = 0; i < this.files.length; i++) {
+                    const file = this.files[i];
+                    
+                    // Create preview card
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3 mb-3';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card h-100';
+                    
+                    const img = document.createElement('img');
+                    img.className = 'card-img-top preview-img';
+                    img.alt = file.name;
+                    
+                    const cardBody = document.createElement('div');
+                    cardBody.className = 'card-body';
+                    
+                    const fileName = document.createElement('p');
+                    fileName.className = 'card-text small text-truncate';
+                    fileName.textContent = file.name;
+                    
+                    // Set up the preview image
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Assemble the card
+                    cardBody.appendChild(fileName);
+                    card.appendChild(img);
+                    card.appendChild(cardBody);
+                    col.appendChild(card);
+                    
+                    photoPreviewRow.appendChild(col);
                 }
+            } else {
+                noPhotosMessage.style.display = 'block';
             }
+        });
+        
+        resetPhotosBtn.addEventListener('click', function() {
+            photoInput.value = '';
+            photoPreviewRow.innerHTML = '';
+            noPhotosMessage.style.display = 'block';
         });
     });
 </script>
+
+<style>
+    .preview-img {
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .tab-pane {
+        padding-top: 20px;
+    }
+    
+    .weather-icon-preview {
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
 {% endblock %}

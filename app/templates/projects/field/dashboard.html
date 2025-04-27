@@ -1,242 +1,262 @@
+<!-- app/templates/projects/field/dashboard.html -->
 {% extends "layout.html" %}
 
-{% block title %}Field Dashboard - {{ project.name }}{% endblock %}
+{% block title %}{{ project.name }} - Field Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container">
+    <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Field Dashboard: {{ project.name }}</h1>
         <div>
-            <a href="{{ url_for('projects.view', id=project.id) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Project
+            <h1 class="h3 mb-0">Field Management</h1>
+            <p class="text-muted">{{ project.name }} ({{ project.number }})</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_overview.index', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Overview
             </a>
         </div>
     </div>
-
-    <!-- Summary cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Daily Reports</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ daily_reports_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-calendar-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.field.daily_reports', project_id=project.id) }}" class="text-primary">View All</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Photos</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ photos_count }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-images fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="{{ url_for('projects.field.photos', project_id=project.id) }}" class="text-success">View All</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Safety Incidents</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">0</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-shield-exclamation fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="#" class="text-warning">View All</a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-3">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Project Completion</div>
-                            <div class="row no-gutters align-items-center">
-                                <div class="col-auto">
-                                    <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800">40%</div>
-                                </div>
-                                <div class="col">
-                                    <div class="progress progress-sm mr-2">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: 40%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-clipboard-data fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-center p-2">
-                    <a href="#" class="text-info">Details</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Content Row -->
+    
+    <!-- Dashboard Cards -->
     <div class="row">
-        <!-- Recent Daily Reports -->
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Daily Reports</h6>
-                    <a href="{{ url_for('projects.field.create_daily_report', project_id=project.id) }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg"></i> New Report
-                    </a>
+        <div class="col-md-3">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body text-center">
+                    <h1 class="display-4">{{ daily_reports_count }}</h1>
+                    <p class="text-muted mb-0">Daily Reports</p>
                 </div>
-                <div class="card-body">
-                    {% if recent_reports %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Report #</th>
-                                        <th>Weather</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for report in recent_reports %}
-                                    <tr>
-                                        <td>{{ report.report_date.strftime('%m/%d/%Y') }}</td>
-                                        <td>{{ report.report_number }}</td>
-                                        <td>
-                                            <span class="weather-icon">
-                                                {% if report.weather_condition == 'sunny' %}
-                                                    <i class="bi bi-sun text-warning"></i>
-                                                {% elif report.weather_condition == 'partly_cloudy' %}
-                                                    <i class="bi bi-cloud-sun text-secondary"></i>
-                                                {% elif report.weather_condition == 'cloudy' %}
-                                                    <i class="bi bi-cloud text-secondary"></i>
-                                                {% elif report.weather_condition == 'rainy' %}
-                                                    <i class="bi bi-cloud-rain text-info"></i>
-                                                {% elif report.weather_condition == 'stormy' %}
-                                                    <i class="bi bi-cloud-lightning text-danger"></i>
-                                                {% else %}
-                                                    <i class="bi bi-question-circle text-muted"></i>
-                                                {% endif %}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            {% if report.is_submitted %}
-                                                <span class="badge bg-success">Submitted</span>
-                                            {% else %}
-                                                <span class="badge bg-warning">Draft</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <a href="{{ url_for('projects.field.view_daily_report', project_id=project.id, report_id=report.id) }}" class="btn btn-sm btn-outline-primary">View</a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-center py-3">No daily reports yet. 
-                            <a href="{{ url_for('projects.field.create_daily_report', project_id=project.id) }}">Create your first report</a>
-                        </p>
-                    {% endif %}
+                <div class="card-footer text-center bg-transparent border-0">
+                    <a href="{{ url_for('projects_field.daily_reports', project_id=project.id) }}" class="btn btn-sm btn-primary">View All</a>
                 </div>
             </div>
         </div>
-
-        <!-- Overdue Punchlist Items -->
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-danger">Overdue Punchlist Items</h6>
-                    <a href="{{ url_for('projects.field.punchlists', project_id=project.id) }}" class="btn btn-sm btn-danger">
-                        View All
-                    </a>
+        
+        <div class="col-md-3">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body text-center">
+                    <h1 class="display-4">{{ photos_count }}</h1>
+                    <p class="text-muted mb-0">Photos</p>
                 </div>
-                <div class="card-body">
-                    {% if overdue_items %}
-                        <div class="list-group">
-                            {% for item in overdue_items %}
-                                <a href="{{ url_for('projects.field.view_punchlist', project_id=project.id, item_id=item.id) }}" 
-                                   class="list-group-item list-group-item-action">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">{{ item.title }}</h6>
-                                        <small class="text-danger">Due: {{ item.due_date.strftime('%m/%d/%Y') }}</small>
-                                    </div>
-                                    <p class="mb-1 text-truncate">{{ item.location }}</p>
-                                    <small>{{ item.responsible_party }}</small>
-                                </a>
-                            {% endfor %}
+                <div class="card-footer text-center bg-transparent border-0">
+                    <a href="{{ url_for('projects_field.photos', project_id=project.id) }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body text-center">
+                    <h1 class="display-4">{{ safety_incidents_count }}</h1>
+                    <p class="text-muted mb-0">Safety Incidents</p>
+                </div>
+                <div class="card-footer text-center bg-transparent border-0">
+                    <a href="{{ url_for('projects_field.safety_incidents', project_id=project.id) }}" class="btn btn-sm btn-primary">View All</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="circular-progress-container">
+                        <div class="circular-progress" data-value="{{ project_completion }}">
+                            <span class="circular-progress-value">{{ project_completion }}%</span>
                         </div>
-                    {% else %}
-                        <p class="text-center py-3">No overdue punchlist items.</p>
-                    {% endif %}
+                    </div>
+                    <p class="text-muted mb-0">Project Completion</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Recent Photos Gallery -->
+    
+    <!-- Recent Daily Reports -->
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold text-success">Recent Photos</h6>
-            <a href="{{ url_for('projects.field.photos', project_id=project.id) }}" class="btn btn-sm btn-success">
-                <i class="bi bi-images"></i> View All Photos
-            </a>
+            <h6 class="m-0 font-weight-bold text-primary">Recent Daily Reports</h6>
+            <a href="{{ url_for('projects_field.daily_reports', project_id=project.id) }}" class="btn btn-sm btn-primary">View All</a>
+        </div>
+        <div class="card-body">
+            {% if recent_reports %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Report #</th>
+                            <th>Status</th>
+                            <th>Weather</th>
+                            <th>Work Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in recent_reports %}
+                        <tr>
+                            <td>{{ report.report_date.strftime('%m/%d/%Y') if report.report_date else 'N/A' }}</td>
+                            <td>
+                                <a href="{{ url_for('projects_field.daily_reports', project_id=project.id) }}">
+                                    {{ report.report_number }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if report.is_submitted %}
+                                <span class="badge bg-success">Submitted</span>
+                                {% else %}
+                                <span class="badge bg-warning">Draft</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ report.weather_condition|title }}</td>
+                            <td>
+                                {% if report.work_status == 'working' %}
+                                <span class="badge bg-success">Working</span>
+                                {% elif report.work_status == 'delayed' %}
+                                <span class="badge bg-warning">Delayed</span>
+                                {% elif report.work_status == 'halted' %}
+                                <span class="badge bg-danger">Halted</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Unknown</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                No daily reports found for this project.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Recent Photos -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Recent Photos</h6>
+            <a href="{{ url_for('projects_field.photos', project_id=project.id) }}" class="btn btn-sm btn-primary">View All</a>
         </div>
         <div class="card-body">
             {% if recent_photos %}
-                <div class="row">
-                    {% for photo in recent_photos %}
-                        <div class="col-md-3 col-sm-6 mb-4">
-                            <div class="card h-100">
-                                <a href="{{ url_for('static', filename='uploads/' + photo.file_path) }}" target="_blank">
-                                    <img src="{{ url_for('static', filename='uploads/' + photo.file_path) }}" 
-                                         class="card-img-top img-fluid" alt="{{ photo.title or 'Project photo' }}">
-                                </a>
-                                <div class="card-body p-2">
-                                    <p class="card-text small mb-0">{{ photo.title or 'Untitled' }}</p>
-                                    <small class="text-muted">{{ photo.uploaded_at.strftime('%m/%d/%Y') }}</small>
-                                </div>
-                            </div>
+            <div class="row">
+                {% for photo in recent_photos %}
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        <img src="{{ url_for('static', filename='uploads/' + photo.file_path) }}" class="card-img-top" alt="{{ photo.title }}">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ photo.title }}</h6>
+                            <p class="card-text text-muted small">{{ photo.uploaded_at.strftime('%m/%d/%Y') if photo.uploaded_at else 'N/A' }}</p>
                         </div>
-                    {% endfor %}
+                    </div>
                 </div>
+                {% endfor %}
+            </div>
             {% else %}
-                <p class="text-center py-3">No photos uploaded yet.</p>
+            <div class="alert alert-info">
+                No photos found for this project.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Overdue Punchlist Items -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Overdue Punchlist Items</h6>
+            <a href="{{ url_for('projects_field.punchlists', project_id=project.id) }}" class="btn btn-sm btn-primary">View All</a>
+        </div>
+        <div class="card-body">
+            {% if overdue_items %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Due Date</th>
+                            <th>Days Overdue</th>
+                            <th>Priority</th>
+                            <th>Responsible Party</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in overdue_items %}
+                        <tr>
+                            <td>{{ item.title }}</td>
+                            <td>{{ item.due_date.strftime('%m/%d/%Y') if item.due_date else 'N/A' }}</td>
+                            <td>
+                                {% if item.due_date %}
+                                {{ (today - item.due_date).days }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.priority == 'high' %}
+                                <span class="badge bg-danger">High</span>
+                                {% elif item.priority == 'medium' %}
+                                <span class="badge bg-warning">Medium</span>
+                                {% elif item.priority == 'low' %}
+                                <span class="badge bg-info">Low</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ item.priority|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.responsible_party }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                No overdue punchlist items! 🎉
+            </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Add the circular progress script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize circular progress bars
+    document.querySelectorAll('.circular-progress').forEach(function(el) {
+        const value = el.getAttribute('data-value');
+        el.style.background = `conic-gradient(#4e73df ${value * 3.6}deg, #f8f9fc 0deg)`;
+    });
+});
+</script>
+
+<!-- Add some CSS for the circular progress -->
+<style>
+.circular-progress-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.circular-progress {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.circular-progress::before {
+    content: "";
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: white;
+}
+.circular-progress-value {
+    position: relative;
+    font-size: 20px;
+    font-weight: bold;
+    color: #4e73df;
+}
+</style>
 {% endblock %}

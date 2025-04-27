@@ -3,6 +3,7 @@ from werkzeug.exceptions import Forbidden
 import re
 import ipaddress
 from functools import wraps
+import html
 
 def configure_security(app):
     """Configure security middlewares and settings"""
@@ -92,40 +93,107 @@ def allowed_file(filename):
         
     return ext in ALLOWED_EXTENSIONS
 
-def has_sql_injection(request):
-    """Check for common SQL injection patterns"""
-    # Simple SQL injection patterns
-    patterns = [
-        r"'(?:\s+)?--",
-        r';(?:\s+)?--',
-        r'OR\s+1\s*=\s*1',
-        r'DROP\s+TABLE',
-        r'INSERT\s+INTO',
-        r'DELETE\s+FROM',
-        r'UNION\s+SELECT',
-        r'EXEC\s+xp_',
-        r'WAITFOR\s+DELAY'
-    ]
+def sanitize_input(input_string):
+    """
+    Sanitize input to prevent XSS and SQL injection
     
-    # Check query parameters and form data
-    params = []
-    if request.args:
-        params.extend(request.args.values())
-    if request.form:
-        params.extend(request.form.values())
-    if request.json:
-        params.extend([str(v) for v in request.json.values()])
+    :param input_string: Input string to sanitize
+    :return: Sanitized string
+    """
+    if not isinstance(input_string, str):
+        return input_string
     
-    # Check each parameter against patterns
-    for param in params:
-        if not isinstance(param, str):
-            continue
-        for pattern in patterns:
-            if re.search(pattern, param, re.IGNORECASE):
+    # HTML escape
+    input_string = html.escape(input_string)
+    
+    # Remove potential SQL injection patterns
+    input_string = re.sub(r'(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER)\b)', '', input_string, flags=re.IGNORECASE)
+    
+    return input_string
+
+def has_sql_injection(req):
+    """
+    Check for potential SQL injection in request
+    
+    :param req: Flask request object
+    :return: Boolean indicating potential SQL injection
+    """
+    # Skip SQL injection check for certain routes or methods
+    if req.method in ['GET', 'HEAD', 'OPTIONS']:
+        return False
+    
+    # Check query parameters
+    for key, value in req.args.items():
+        if contains_sql_injection(str(value)):
+            return True
+    
+    # Check form data
+    if req.form:
+        for key, value in req.form.items():
+            if contains_sql_injection(str(value)):
                 return True
+    
+    # Check JSON data with safe handling
+    try:
+        if req.is_json:
+            json_data = req.get_json(silent=True)
+            if json_data:
+                for key, value in json_data.items():
+                    if contains_sql_injection(str(value)):
+                        return True
+    except Exception:
+        # Silently handle JSON parsing errors
+        pass
     
     return False
 
+
+def contains_sql_injection(input_string):
+    """
+    Detect potential SQL injection patterns
+    
+    :param input_string: String to check
+    :return: Boolean indicating potential SQL injection
+    """
+    if not isinstance(input_string, str):
+        return False
+    
+    # SQL injection patterns
+    sql_injection_patterns = [
+        r'\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER)\b',  # SQL keywords
+        r'--',  # SQL comment
+        r"['\"]\s*OR\s*1\s*=\s*1",  # Classic OR 1=1 injection
+        r"['\"]\s*;",  # Potential statement termination
+        r'\bOR\b',  # Potential boolean-based injection
+        r"['\"]\s*AND\s*['\"0-9a-zA-Z]+\s*=\s*['\"0-9a-zA-Z]",  # AND-based injection
+        r"(\/\*.*\*\/)",  # Block comments
+    ]
+    
+    # Convert to lowercase for case-insensitive matching
+    input_lower = input_string.lower()
+    
+    # Check against injection patterns
+    for pattern in sql_injection_patterns:
+        if re.search(pattern, input_lower):
+            return True
+    
+    return False
+
+def validate_request():
+    """
+    Middleware to validate incoming requests
+    """
+    # Skip validation for certain routes if needed
+    if request.path.startswith('/static/') or request.path.startswith('/favicon.ico'):
+        return
+    
+    # Check for SQL injection
+    if has_sql_injection(request):
+        # Log the potential attack
+        app.logger.warning(f"Potential SQL injection attempt from {request.remote_addr}")
+        # You might want to add more sophisticated handling here
+        # For now, we'll just prevent further processing
+        abort(400, description="Invalid request")
 def validate_input(func):
     """Decorator to validate input parameters for SQL injection"""
     @wraps(func)
@@ -178,3 +246,18 @@ def is_ip_allowed(ip, allowed_ips):
         return False
         
     return False
+
+def add_security_headers(response):
+    """Add security headers to the response"""
+    if not hasattr(current_app, 'config'):
+        return response
+        
+    # Get secure headers from config
+    secure_headers = current_app.config.get('SECURE_HEADERS', {})
+    
+    # Add headers if not already present
+    for header, value in secure_headers.items():
+        if header not in response.headers:
+            response.headers[header] = value
+    
+    return response

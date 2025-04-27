@@ -6,7 +6,7 @@ from app.models.user import User
 from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm, ProfileForm, PasswordChangeForm
 from datetime import datetime, timedelta
 from flask_httpauth import HTTPTokenAuth
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import URLSafeTimedSerializer as Serializer
 from itsdangerous import BadSignature, SignatureExpired
 
 auth_bp = Blueprint('auth', __name__)

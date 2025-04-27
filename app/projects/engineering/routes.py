@@ -1,3 +1,4 @@
+# app/projects/engineering/routes.py
 from flask import render_template, request, redirect, url_for, flash, jsonify, send_file
 from flask_login import login_required, current_user
 from . import engineering_bp
@@ -13,11 +14,10 @@ import os
 import uuid
 
 # Engineering Dashboard
-@engineering_bp.route('/dashboard')
+@engineering_bp.route('/<int:project_id>/engineering/dashboard')
 @login_required
-def dashboard():
+def dashboard(project_id):
     """Engineering dashboard with summary of all modules"""
-    project_id = request.args.get('project_id', type=int)
     project = Project.query.get_or_404(project_id)
     
     # Get counts for all engineering modules
@@ -61,21 +61,19 @@ def dashboard():
                           submittal_data=submittal_data)
 
 # RFI Routes
-@engineering_bp.route('/rfis')
+@engineering_bp.route('/<int:project_id>/engineering/rfis')
 @login_required
-def rfis():
+def rfis(project_id):
     """List all RFIs for a project"""
-    project_id = request.args.get('project_id', type=int)
     project = Project.query.get_or_404(project_id)
     rfis = RFI.query.filter_by(project_id=project_id).order_by(RFI.number).all()
     return render_template('projects/engineering/rfis/list.html', 
-                          project=project, rfis=rfis)
+                           project=project, rfis=rfis)
 
-@engineering_bp.route('/rfis/create', methods=['GET', 'POST'])
+@engineering_bp.route('/<int:project_id>/engineering/rfis/create', methods=['GET', 'POST'])
 @login_required
-def create_rfi():
+def create_rfi(project_id):
     """Create a new RFI"""
-    project_id = request.args.get('project_id', type=int)
     project = Project.query.get_or_404(project_id)
     form = RFIForm()
     
@@ -99,27 +97,25 @@ def create_rfi():
         db.session.add(rfi)
         db.session.commit()
         flash('RFI created successfully!', 'success')
-        return redirect(url_for('projects.engineering.rfis', project_id=project_id))
+        return redirect(url_for('projects_engineering.rfis', project_id=project_id))
         
     return render_template('projects/engineering/rfis/create.html',
                           project=project, form=form)
-
-@engineering_bp.route('/rfis/<int:id>')
+@engineering_bp.route('/<int:id>/engineering/rfis/view')
 @login_required
 def view_rfi(id):
     """View a specific RFI"""
     rfi = RFI.query.get_or_404(id)
     project = Project.query.get_or_404(rfi.project_id)
     
-    # Get comments and attachments
-    comments = Comment.query.filter_by(record_type='rfi', record_id=id).order_by(Comment.created_at).all()
-    attachments = Attachment.query.filter_by(record_type='rfi', record_id=id).all()
+    # Query directly using module_name instead of record_type
+    comments = Comment.query.filter_by(module_name='rfi', record_id=id).order_by(Comment.created_at).all()
+    attachments = Attachment.query.filter_by(module_name='rfi', record_id=id).all()
     
     return render_template('projects/engineering/rfis/view.html',
                           project=project, rfi=rfi,
                           comments=comments, attachments=attachments)
-
-@engineering_bp.route('/rfis/<int:id>/edit', methods=['GET', 'POST'])
+@engineering_bp.route('/<int:id>/engineering/rfis/edit', methods=['GET', 'POST'])
 @login_required
 def edit_rfi(id):
     """Edit an RFI"""
@@ -142,12 +138,11 @@ def edit_rfi(id):
         
         db.session.commit()
         flash('RFI updated successfully!', 'success')
-        return redirect(url_for('projects.engineering.view_rfi', id=id))
+        return redirect(url_for('projects_engineering.view_rfi', id=id))
     
     return render_template('projects/engineering/rfis/edit.html',
                           project=project, rfi=rfi, form=form)
-
-@engineering_bp.route('/rfis/<int:id>/delete', methods=['POST'])
+@engineering_bp.route('/<int:id>/engineering/rfis/delete', methods=['POST'])
 @login_required
 @role_required(['Admin', 'Owner', 'Owners Representative', 'General Contractor'])
 def delete_rfi(id):
@@ -155,24 +150,23 @@ def delete_rfi(id):
     rfi = RFI.query.get_or_404(id)
     project_id = rfi.project_id
     
-    # Delete related comments and attachments
-    Comment.query.filter_by(record_type='rfi', record_id=id).delete()
+    # Delete related comments and attachments - use module_name
+    Comment.query.filter_by(module_name='rfi', record_id=id).delete()
     
     # Delete attachment files before deleting records
-    attachments = Attachment.query.filter_by(record_type='rfi', record_id=id).all()
+    attachments = Attachment.query.filter_by(module_name='rfi', record_id=id).all()
     for attachment in attachments:
         if os.path.exists(attachment.file_path):
             os.remove(attachment.file_path)
     
-    Attachment.query.filter_by(record_type='rfi', record_id=id).delete()
+    Attachment.query.filter_by(module_name='rfi', record_id=id).delete()
     
     db.session.delete(rfi)
     db.session.commit()
     
     flash('RFI deleted successfully!', 'success')
-    return redirect(url_for('projects.engineering.rfis', project_id=project_id))
-
-@engineering_bp.route('/rfis/<int:id>/comments', methods=['POST'])
+    return redirect(url_for('projects_engineering.rfis', project_id=project_id))
+@engineering_bp.route('/<int:id>/engineering/rfis/comment', methods=['POST'])
 @login_required
 def add_rfi_comment(id):
     """Add a comment to an RFI"""
@@ -181,22 +175,23 @@ def add_rfi_comment(id):
     
     if not content:
         flash('Comment cannot be empty', 'danger')
-        return redirect(url_for('projects.engineering.view_rfi', id=id))
+        return redirect(url_for('projects_engineering.view_rfi', id=id))
     
     comment = Comment(
-        record_type='rfi',
+        module_name='rfi',  # Use module_name instead of record_type
         record_id=id,
         content=content,
-        user_id=current_user.id
+        user_id=current_user.id,
+        created_at=datetime.utcnow()  # Make sure created_at is set
     )
     
     db.session.add(comment)
     db.session.commit()
     
     flash('Comment added successfully!', 'success')
-    return redirect(url_for('projects.engineering.view_rfi', id=id))
+    return redirect(url_for('projects_engineering.view_rfi', id=id))
 
-@engineering_bp.route('/rfis/<int:id>/attachments', methods=['POST'])
+@engineering_bp.route('/<int:id>/engineering/rfis/attachment', methods=['POST'])
 @login_required
 def add_rfi_attachment(id):
     """Add an attachment to an RFI"""
@@ -204,29 +199,32 @@ def add_rfi_attachment(id):
     
     if 'file' not in request.files:
         flash('No file part', 'danger')
-        return redirect(url_for('projects.engineering.view_rfi', id=id))
+        return redirect(url_for('projects_engineering.view_rfi', id=id))
     
     file = request.files['file']
     if file.filename == '':
         flash('No selected file', 'danger')
-        return redirect(url_for('projects.engineering.view_rfi', id=id))
+        return redirect(url_for('projects_engineering.view_rfi', id=id))
     
     if file:
         filename = str(uuid.uuid4()) + '_' + file.filename
-        upload_dir = os.path.join('app', 'uploads', 'rfis', str(rfi.project_id))
+        upload_dir = os.path.join('app', 'static', 'uploads', 'rfis', str(rfi.project_id))
         os.makedirs(upload_dir, exist_ok=True)
         
         file_path = os.path.join(upload_dir, filename)
         file.save(file_path)
         
+        # Store relative path for database
+        relative_path = os.path.join('uploads', 'rfis', str(rfi.project_id), filename)
+        
         attachment = Attachment(
-            record_type='rfi',
+            module_name='rfi',  # Use module_name instead of record_type
             record_id=id,
             filename=file.filename,
-            file_path=file_path,
+            file_path=relative_path,  # Store relative path
             file_size=os.path.getsize(file_path),
             file_type=file.content_type,
-            uploaded_by=current_user.id
+            uploader_id=current_user.id  # Make sure field matches model
         )
         
         db.session.add(attachment)
@@ -234,17 +232,16 @@ def add_rfi_attachment(id):
         
         flash('Attachment added successfully!', 'success')
     
-    return redirect(url_for('projects.engineering.view_rfi', id=id))
-
-@engineering_bp.route('/rfis/<int:id>/pdf')
+    return redirect(url_for('projects_engineering.view_rfi', id=id))
+@engineering_bp.route('/<int:id>/engineering/rfis/pdf')
 @login_required
 def rfi_pdf(id):
     """Generate PDF for an RFI"""
     rfi = RFI.query.get_or_404(id)
     project = Project.query.get_or_404(rfi.project_id)
     
-    # Get comments for the RFI
-    comments = Comment.query.filter_by(record_type='rfi', record_id=id).order_by(Comment.created_at).all()
+    # Get comments for the RFI - use module_name instead of record_type
+    comments = Comment.query.filter_by(module_name='rfi', record_id=id).order_by(Comment.created_at).all()
     
     html = render_template('projects/engineering/rfis/pdf.html',
                           project=project, rfi=rfi,
@@ -260,23 +257,20 @@ def rfi_pdf(id):
         as_attachment=True,
         mimetype='application/pdf'
     )
-
 # Submittal Routes
-@engineering_bp.route('/submittals')
+@engineering_bp.route('/<int:project_id>/engineering/submittals')
 @login_required
-def submittals():
+def submittals(project_id):
     """List all submittals for a project"""
-    project_id = request.args.get('project_id', type=int)
     project = Project.query.get_or_404(project_id)
     submittals = Submittal.query.filter_by(project_id=project_id).order_by(Submittal.number).all()
     return render_template('projects/engineering/submittals/list.html', 
                           project=project, submittals=submittals)
 
-@engineering_bp.route('/submittals/create', methods=['GET', 'POST'])
+@engineering_bp.route('/<int:project_id>/engineering/submittals/create', methods=['GET', 'POST'])
 @login_required
-def create_submittal():
+def create_submittal(project_id):
     """Create a new submittal"""
-    project_id = request.args.get('project_id', type=int)
     project = Project.query.get_or_404(project_id)
     form = SubmittalForm()
     
@@ -300,12 +294,12 @@ def create_submittal():
         db.session.add(submittal)
         db.session.commit()
         flash('Submittal created successfully!', 'success')
-        return redirect(url_for('projects.engineering.submittals', project_id=project_id))
+        return redirect(url_for('projects_engineering.submittals', project_id=project_id))
         
     return render_template('projects/engineering/submittals/create.html',
                           project=project, form=form)
 
-@engineering_bp.route('/submittals/<int:id>')
+@engineering_bp.route('/<int:id>/engineering/submittals')
 @login_required
 def view_submittal(id):
     """View a specific submittal"""

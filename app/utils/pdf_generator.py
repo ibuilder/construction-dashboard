@@ -1,5 +1,5 @@
 from flask import render_template
-import weasyprint
+#import weasyprint
 from io import BytesIO
 
 def generate_pdf(html):
@@ -11,8 +11,8 @@ def generate_pdf(html):
     Returns:
         BytesIO object containing the PDF
     """
-    pdf = weasyprint.HTML(string=html).write_pdf()
-    return BytesIO(pdf)
+    pass
+    # return BytesIO(pdf)
 
 def generate_pdf_from_template(template_path, **context):
     """Generate a PDF from a template

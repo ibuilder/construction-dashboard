@@ -1,3 +1,4 @@
+# app/models/task.py
 from sqlalchemy import Column, Integer, String, ForeignKey, Text, Date, Boolean, DateTime
 from sqlalchemy.orm import relationship, backref
 from app.extensions import db

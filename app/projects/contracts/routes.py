@@ -18,10 +18,10 @@ from datetime import datetime, date
 import os
 import uuid
 
-contracts_bp = Blueprint('projects.contracts', __name__)
+contracts_bp = Blueprint('projects_contracts', __name__)
 
 # Prime Contracts
-@contracts_bp.route('/')
+@contracts_bp.route('/contracts')
 @login_required
 @project_access_required
 def index():

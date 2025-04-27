@@ -1,0 +1,160 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Submittal - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{{ project.name }}</h1>
+            <p class="text-muted">{{ project.number }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_engineering.submittals', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Submittals
+            </a>
+        </div>
+    </div>
+    
+    <!-- Project Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_overview.index', project_id=project.id) }}">
+                                <i class="fas fa-home"></i> Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-drafting-compass"></i> Engineering
+                            </a>
+                        </li>
+                        <!-- Add more module links here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Engineering Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_engineering.dashboard', project_id=project.id) }}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('projects_engineering.rfis', project_id=project.id) }}">
+                                <i class="fas fa-question-circle"></i> RFIs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('projects_engineering.submittals', project_id=project.id) }}">
+                                <i class="fas fa-file-alt"></i> Submittals
+                            </a>
+                        </li>
+                        <!-- Add more engineering tabs here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Create New Submittal</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('projects_engineering.create_submittal', project_id=project.id) }}" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.number.id }}" class="form-label">{{ form.number.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.number(class="form-control" + (" is-invalid" if form.number.errors else ""), readonly=true) }}
+                            {% for error in form.number.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Automatically generated submittal number</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.specification_section.id }}" class="form-label">{{ form.specification_section.label.text }}</label>
+                            {{ form.specification_section(class="form-control" + (" is-invalid" if form.specification_section.errors else ""), placeholder="e.g., 06 10 00") }}
+                            {% for error in form.specification_section.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                            <small class="form-text text-muted">Enter the CSI specification section</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="{{ form.title.id }}" class="form-label">{{ form.title.label.text }} <span class="text-danger">*</span></label>
+                    {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Enter a descriptive title for this submittal") }}
+                    {% for error in form.title.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }}</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=5, placeholder="Provide additional details about this submittal") }}
+                    {% for error in form.description.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label for="{{ form.date_required.id }}" class="form-label">{{ form.date_required.label.text }}</label>
+                    {{ form.date_required(class="form-control datepicker" + (" is-invalid" if form.date_required.errors else ""), type="date") }}
+                    {% for error in form.date_required.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Date by which a response is needed</small>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label class="form-label">Attachments</label>
+                    <div class="input-group">
+                        <input type="file" name="files[]" class="form-control" multiple>
+                    </div>
+                    <small class="form-text text-muted">You can attach multiple files to this submittal</small>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('projects_engineering.submittals', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Create Submittal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize datepicker if using a JavaScript date picker library
+    $(document).ready(function() {
+        // If using a datepicker plugin
+        if ($.fn.datepicker) {
+            $('.datepicker').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true
+            });
+        }
+    });
+</script>
+{% endblock %}

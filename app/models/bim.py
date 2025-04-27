@@ -1,6 +1,8 @@
+# app/models/bim.py
 from app.extensions import db
 from datetime import datetime
 import os
+from sqlalchemy.ext.declarative import declared_attr
 
 class BIMModel(db.Model):
     __tablename__ = 'bim_models'
@@ -93,3 +95,21 @@ class BIMIssue(db.Model):
     creator = db.relationship('User', foreign_keys=[created_by])
     assignee = db.relationship('User', foreign_keys=[assigned_to])
     comments = db.relationship('BIMIssueComment', back_populates='issue', cascade='all, delete-orphan')
+
+# Add BIMIssueComment class since it's referenced in BIMIssue
+class BIMIssueComment(db.Model):
+    __tablename__ = 'bim_issue_comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    issue_id = db.Column(db.Integer, db.ForeignKey('bim_issues.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    issue = db.relationship('BIMIssue', back_populates='comments')
+    user = db.relationship('User')
+    
+    def __repr__(self):
+        return f'<BIMIssueComment {self.id}>'

@@ -1,6 +1,8 @@
+# app/models/closeout.py
 from app.extensions import db
 from datetime import datetime
 from enum import Enum
+from sqlalchemy.ext.declarative import declared_attr
 
 class WarrantyType(str, Enum):
     STANDARD = 'standard'

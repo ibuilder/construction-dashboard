@@ -1,0 +1,159 @@
+<!-- app/templates/projects/preconstruction/dashboard.html -->
+{% extends "layout.html" %}
+
+{% block title %}{{ project.name }} - Preconstruction Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Preconstruction</h1>
+            <p class="text-muted">{{ project.name }} ({{ project.number }})</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_overview.index', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Overview
+            </a>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Qualified Bidders</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ bidders }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center bg-transparent border-0">
+                    <a href="{{ url_for('projects_preconstruction.bidders', project_id=project.id) }}" class="btn btn-sm btn-primary">Manage Bidders</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Bid Packages</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ packages }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-folder-open fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center bg-transparent border-0">
+                    <a href="{{ url_for('projects_preconstruction.packages', project_id=project.id) }}" class="btn btn-sm btn-success">Manage Packages</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Bid Manuals</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ manuals }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-book fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-center bg-transparent border-0">
+                    <a href="{{ url_for('projects_preconstruction.manuals', project_id=project.id) }}" class="btn btn-sm btn-info">Manage Manuals</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bid Packages by Status -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Bid Packages by Status</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="bidPackagesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('projects_preconstruction.create_bidder', project_id=project.id) }}" class="btn btn-primary btn-block">
+                            <i class="fas fa-user-plus me-2"></i> Add Qualified Bidder
+                        </a>
+                        <a href="{{ url_for('projects_preconstruction.create_package', project_id=project.id) }}" class="btn btn-success btn-block">
+                            <i class="fas fa-folder-plus me-2"></i> Create Bid Package
+                        </a>
+                        <a href="{{ url_for('projects_preconstruction.create_manual', project_id=project.id) }}" class="btn btn-info btn-block">
+                            <i class="fas fa-file-upload me-2"></i> Upload Bid Manual
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Status Chart
+    var ctx = document.getElementById("bidPackagesChart");
+    var myPieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels|tojson }},
+            datasets: [{
+                data: {{ status_data|tojson }},
+                backgroundColor: {{ chart_colors|tojson }},
+                hoverBackgroundColor: {{ chart_colors|tojson }},
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            tooltips: {
+                backgroundColor: "rgb(255,255,255)",
+                bodyFontColor: "#858796",
+                borderColor: '#dddfeb',
+                borderWidth: 1,
+                xPadding: 15,
+                yPadding: 15,
+                displayColors: false,
+                caretPadding: 10,
+            },
+            legend: {
+                display: true,
+                position: 'bottom'
+            },
+            cutoutPercentage: 60,
+        },
+    });
+});
+</script>
+{% endblock %}

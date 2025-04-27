@@ -1,3 +1,4 @@
+# app.models.settings.py
 from app.extensions import db
 from datetime import datetime
 from sqlalchemy.sql import func
@@ -122,7 +123,7 @@ class Company(db.Model):
     
     # Relationships
     contacts = db.relationship('CompanyContact', backref='company', cascade='all, delete-orphan')
-    users = db.relationship('User', backref='company')
+    users = db.relationship('User', back_populates='company')
 
 class CompanyContact(db.Model):
     __tablename__ = 'company_contacts'

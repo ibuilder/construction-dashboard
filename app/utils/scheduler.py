@@ -152,7 +152,7 @@ def clean_temp_files(app):
             
             if file_modified < yesterday:
                 try:
-                    if os.path.isfile(item_path)):
+                    if os.path.isfile(item_path):
                         os.remove(item_path)
                     else:
                         import shutil

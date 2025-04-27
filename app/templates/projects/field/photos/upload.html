@@ -1,0 +1,141 @@
+<!-- app/templates/projects/field/photos/upload.html -->
+{% extends "layout.html" %}
+
+{% block title %}{{ project.name }} - Upload Photos{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Upload Project Photos</h1>
+            <p class="text-muted">{{ project.name }} ({{ project.number }})</p>
+        </div>
+        <div>
+            <a href="{{ url_for('projects_field.photos', project_id=project.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Photos
+            </a>
+        </div>
+    </div>
+    
+    <!-- Upload Form -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Photo Upload Form</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.title.id }}" class="form-label">Photo Title <span class="text-danger">*</span></label>
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.title.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="{{ form.location.id }}" class="form-label">Location</label>
+                            {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else "")) }}
+                            {% if form.location.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.location.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Specify where in the project this photo was taken</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.description.id }}" class="form-label">Description</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3) }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.description.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.photo.id }}" class="form-label">Photo File <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        {{ form.photo(class="form-control" + (" is-invalid" if form.photo.errors else ""), id="photoInput") }}
+                        <button class="btn btn-outline-secondary" type="button" id="resetPhotoBtn">Reset</button>
+                    </div>
+                    {% if form.photo.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.photo.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">Allowed file types: JPG, JPEG, PNG</div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="form-check">
+                        {{ form.is_featured(class="form-check-input") }}
+                        <label class="form-check-label" for="{{ form.is_featured.id }}">
+                            Feature this photo on the project dashboard
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Image Preview -->
+                <div class="mb-4">
+                    <div id="imagePreviewContainer" class="d-none">
+                        <h6 class="mb-2">Preview:</h6>
+                        <img id="imagePreview" src="#" alt="Image Preview" class="img-thumbnail" style="max-height: 300px;">
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back();">Cancel</button>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Image Preview JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('photoInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const resetBtn = document.getElementById('resetPhotoBtn');
+    
+    photoInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreviewContainer.classList.remove('d-none');
+            }
+            
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+    
+    resetBtn.addEventListener('click', function() {
+        photoInput.value = '';
+        imagePreviewContainer.classList.add('d-none');
+    });
+});
+</script>
+{% endblock %}

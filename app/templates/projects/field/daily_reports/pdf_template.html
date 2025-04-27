@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.name }} - Daily Report {{ report.report_number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24pt;
+            color: #444;
+        }
+        .header p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+        .section {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        .section h2 {
+            font-size: 16pt;
+            margin: 0 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+        .section-content {
+            margin-left: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            margin-bottom: 5px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10pt;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-success {
+            background-color: #28a745;
+        }
+        .badge-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .badge-danger {
+            background-color: #dc3545;
+        }
+        .badge-info {
+            background-color: #17a2b8;
+        }
+        .badge-secondary {
+            background-color: #6c757d;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .table-footer {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+        .text-content {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+        .weather-icon {
+            font-size: 24pt;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .photo-card {
+            border: 1px solid #ddd;
+            padding: 5px;
+            text-align: center;
+        }
+        .photo-card img {
+            max-width: 100%;
+            max-height: 200px;
+        }
+        .photo-title {
+            margin-top: 5px;
+            font-size: 10pt;
+        }
+        @media print {
+            body {
+                padding: 0;
+                font-size: 10pt;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Daily Report: {{ report.report_number }}</h1>
+        <p>{{ project.name }} ({{ project.number }})</p>
+        <p>Date: {{ report.report_date.strftime('%m/%d/%Y') if report.report_date else 'N/A' }}</p>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-item">
+            <span class="info-label">Status:</span>
+            {% if report.is_submitted %}
+                <span class="badge badge-success">Submitted</span>
+            {% else %}
+                <span class="badge badge-warning">Draft</span>
+            {% endif %}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Created By:</span>
+            {{ report.author.name if report.author else 'Unknown' }}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Work Status:</span>
+            {% if report.work_status == 'working' %}
+                <span class="badge badge-success">Working</span>
+            {% elif report.work_status == 'delayed' %}
+                <span class="badge badge-warning">Delayed</span>
+            {% elif report.work_status == 'halted' %}
+                <span class="badge badge-danger">Halted</span>
+            {% else %}
+                <span class="badge badge-secondary">Unknown</span>
+            {% endif %}
+        </div>
+        <div class="info-item">
+            <span class="info-label">Weather:</span>
+            {{ report.weather_condition|replace('_', ' ')|title }}
+        </div>
+    </div>
+
+    <!-- Work Summary Section -->
+    <div class="section">
+        <h2>Work Performed</h2>
+        <div class="text-content">
+            {{ report.work_summary|nl2br }}
+        </div>
+    </div>
+
+    {% if report.materials_received %}
+    <div class="section">
+        <h2>Materials Received</h2>
+        <div class="text-content">
+            {{ report.materials_received|nl2br }}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if report.issues %}
+    <div class="section">
+        <h2>Issues Encountered</h2>
+        <div class="text-content">
+            {{ report.issues|nl2br }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Weather Section -->
+    <div class="section">
+        <h2>Weather Conditions</h2>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Condition:</span>
+                {{ report.weather_condition|replace('_', ' ')|title }}
+            </div>
+            <div class="info-item">
+                <span class="info-label">Temperature High:</span>
+                {{ report.temperature_high }}°F
+            </div>
+            <div class="info-item">
+                <span class="info-label">Temperature Low:</span>
+                {{ report.temperature_low }}°F
+            </div>
+            {% if report.precipitation is not none %}
+            <div class="info-item">
+                <span class="info-label">Precipitation:</span>
+                {{ report.precipitation }} in
+            </div>
+            {% endif %}
+            {% if report.wind_speed is not none %}
+            <div class="info-item">
+                <span class="info-label">Wind Speed:</span>
+                {{ report.wind_speed }} mph
+            </div>
+            {% endif %}
+        </div>
+
+        {% if report.site_conditions %}
+        <div class="section-content">
+            <span class="info-label">Site Conditions:</span>
+            <div class="text-content">
+                {{ report.site_conditions }}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if report.work_status == 'delayed' and report.delay_reason %}
+        <div class="section-content">
+            <span class="info-label">Delay Reason:</span>
+            <div class="text-content">
+                {{ report.delay_reason }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Labor Section -->
+    <div class="section page-break">
+        <h2>Manpower</h2>
+        {% if report.labor_entries.count() > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Description of Work</th>
+                    <th>Number of Workers</th>
+                    <th>Hours Worked</th>
+                    <th>Total Man-Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in report.labor_entries %}
+                <tr>
+                    <td>{{ entry.company }}</td>
+                    <td>{{ entry.work_description }}</td>
+                    <td>{{ entry.worker_count }}</td>
+                    <td>{{ entry.hours_worked }}</td>
+                    <td>{{ entry.worker_count * entry.hours_worked }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-footer">
+                    <td colspan="2">Total</td>
+                    <td>{{ total_workers }}</td>
+                    <td>-</td>
+                    <td>{{ total_man_hours }}</td>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+        <div class="section-content">
+            <p>No labor entries have been recorded for this report.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Equipment Section -->
+    <div class="section">
+        <h2>Equipment</h2>
+        {% if report.equipment_entries.count() > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Equipment Type</th>
+                    <th>Count</th>
+                    <th>Hours Used</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in report.equipment_entries %}
+                <tr>
+                    <td>{{ entry.equipment_type }}</td>
+                    <td>{{ entry.count }}</td>
+                    <td>{{ entry.hours_used }}</td>
+                    <td>{{ entry.notes }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-footer">
+                    <td>Total</td>
+                    <td>{{ total_equipment }}</td>
+                    <td>{{ total_equipment_hours }}</td>
+                    <td>-</td>
+                </tr>
+            </tfoot>
+        </table>
+        {% else %}
+        <div class="section-content">
+            <p>No equipment entries have been recorded for this report.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if report.notes %}
+    <div class="section">
+        <h2>Additional Notes</h2>
+        <div class="text-content">
+            {{ report.notes|nl2br }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Photos Section -->
+    {% if photos and photos|length > 0 %}
+    <div class="section page-break">
+        <h2>Photos</h2>
+        <div class="photos-grid">
+            {% for photo in photos %}
+            <div class="photo-card">
+                <img src="{{ url_for('static', filename=photo.file_path, _external=True) }}" alt="{{ photo.title }}">
+                <div class="photo-title">{{ photo.title }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>Report generated on {{ datetime.utcnow().strftime('%m/%d/%Y %H:%M') }}</p>
+    </div>
+</body>
+</html>

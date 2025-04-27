@@ -1,0 +1,232 @@
+{% extends "layout.html" %}
+
+{% block title %}My Tasks{% endblock %}
+
+{% block extra_css %}
+<style>
+.task-card {
+    transition: all .2s ease-in-out;
+    border-left: 4px solid #6c757d;
+}
+.task-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+.task-card.rfi {
+    border-left-color: #007bff;
+}
+.task-card.submittal {
+    border-left-color: #28a745;
+}
+.task-card.punchlist {
+    border-left-color: #dc3545;
+}
+.priority-high {
+    color: #dc3545;
+}
+.priority-medium {
+    color: #fd7e14;
+}
+.priority-low {
+    color: #28a745;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">My Tasks</h1>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Task Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-primary">RFIs</h5>
+                            <h3 class="mb-0">{{ assigned_rfis|length }}</h3>
+                        </div>
+                        <div class="rounded-circle bg-primary bg-opacity-10 p-3">
+                            <i class="fas fa-question-circle fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-success">Submittals</h5>
+                            <h3 class="mb-0">{{ assigned_submittals|length }}</h3>
+                        </div>
+                        <div class="rounded-circle bg-success bg-opacity-10 p-3">
+                            <i class="fas fa-file-upload fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title text-danger">Punchlist Items</h5>
+                            <h3 class="mb-0">{{ assigned_punchlists|length }}</h3>
+                        </div>
+                        <div class="rounded-circle bg-danger bg-opacity-10 p-3">
+                            <i class="fas fa-clipboard-check fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RFIs Section -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-question-circle me-2"></i> Open RFIs ({{ assigned_rfis|length }})
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if assigned_rfis %}
+                <div class="row">
+                    {% for rfi in assigned_rfis %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card task-card rfi h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h5 class="card-title">#{{ rfi.number }}</h5>
+                                    <span class="badge bg-warning text-dark">{{ rfi.status }}</span>
+                                </div>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ rfi.subject }}</h6>
+                                <p class="card-text small">{{ rfi.question|truncate(100) }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-muted">
+                                        {% if rfi.date_required %}
+                                            Due: {{ rfi.date_required.strftime('%m/%d/%Y') }}
+                                        {% endif %}
+                                    </small>
+                                    <a href="{{ url_for('projects.projects_engineering.view_rfi', project_id=rfi.project_id, id=rfi.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No RFIs assigned to you.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Submittals Section -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-success">
+                <i class="fas fa-file-upload me-2"></i> Pending Submittals ({{ assigned_submittals|length }})
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if assigned_submittals %}
+                <div class="row">
+                    {% for submittal in assigned_submittals %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card task-card submittal h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h5 class="card-title">#{{ submittal.number }}</h5>
+                                    <span class="badge bg-info">{{ submittal.status }}</span>
+                                </div>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ submittal.title }}</h6>
+                                <p class="card-text small">
+                                    {% if submittal.description %}
+                                        {{ submittal.description|truncate(100) }}
+                                    {% else %}
+                                        <span class="text-muted">No description provided</span>
+                                    {% endif %}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-muted">
+                                        {% if submittal.date_required %}
+                                            Due: {{ submittal.date_required.strftime('%m/%d/%Y') }}
+                                        {% endif %}
+                                    </small>
+                                    <a href="{{ url_for('projects.engineering.view_submittal', project_id=submittal.project_id, id=submittal.id) }}" class="btn btn-sm btn-outline-success">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No submittals assigned to you.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Punchlist Items Section -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-danger">
+                <i class="fas fa-clipboard-check me-2"></i> Open Punchlist Items ({{ assigned_punchlists|length }})
+            </h6>
+        </div>
+        <div class="card-body">
+            {% if assigned_punchlists %}
+                <div class="row">
+                    {% for punchlist in assigned_punchlists %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card task-card punchlist h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <h5 class="card-title">#{{ punchlist.id }}</h5>
+                                    <span class="badge bg-danger">Open</span>
+                                </div>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ punchlist.title|default('Punchlist Item') }}</h6>
+                                <p class="card-text small">
+                                    {% if punchlist.description %}
+                                        {{ punchlist.description|truncate(100) }}
+                                    {% else %}
+                                        <span class="text-muted">No description provided</span>
+                                    {% endif %}
+                                </p>
+                                
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <small class="text-muted">
+                                        {% if punchlist.due_date %}
+                                            Due: {{ punchlist.due_date.strftime('%m/%d/%Y') }}
+                                        {% endif %}
+                                    </small>
+                                    <a href="{{ url_for('projects.field.view_punchlist', project_id=punchlist.project_id, id=punchlist.id) }}" class="btn btn-sm btn-outline-danger">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No punchlist items assigned to you.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

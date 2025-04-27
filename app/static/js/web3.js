@@ -1,7 +1,5 @@
 // This file contains JavaScript code for interacting with Web3 functionalities.
 
-const Web3 = require('web3');
-
 let web3;
 let contract;
 
